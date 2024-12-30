@@ -2,11 +2,11 @@
   "name": "ayame-web-sdk-samples",
   "version": "2023.1.0",
   "description": "ayame-web-sdk-samples",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "fmt": "biome format --write .",
-    "lint": "biome format --write ."
+    "lint": "biome lint ."
   },
   "repository": {
     "type": "git",
@@ -15,8 +15,11 @@
   "author": "Shiguredo Inc.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/OpenAyame/ayame-web-sdk-samples#readme",
+  "dependencies": {
+    "@open-ayame/ayame-web-sdk": "2025.1.0-canary.1"
+  },
   "devDependencies": {
-    "@biomejs/biome": "1.7.3",
-    "vite": "5.2.11"
+    "@biomejs/biome": "1.9.4",
+    "vite": "6.0.6"
   }
 }

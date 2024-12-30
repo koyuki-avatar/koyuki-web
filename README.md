@@ -4,74 +4,41 @@
 
 ## 時雨堂のオープンソースソフトウェアについて
 
-利用前に https://github.com/shiguredo/oss をお読みください。
+利用前に <https://github.com/shiguredo/oss> をお読みください。
 
 ## オンラインサンプル
 
-https://openayame.github.io/ayame-web-sdk-samples/index.html
+<https://openayame.github.io/ayame-web-sdk-examples/index.html>
 
-## npm install でセットアップ
+## 環境変数を設定する
 
-```
-npm install
-```
-
-## npm run dev で起動
-
-```
-npm run dev
+```bash
+# cp .env.example .env.local
+VITE_AYAME_SIGNALING_URL=wss://ayame.example.com/signaling
+VITE_AYAME_ROOM_ID=ayame-room-id
+VITE_AYAME_SIGNALING_KEY=ayame-signaling-key
 ```
 
-localhost:5000 で閲覧可能です。
+## 起動する
 
-## clientId, roomId  を指定したい
-
-query string で指定可能です。
-
+```bash
+pnpm install
+pnpm dev
 ```
-http://localhost:5000/recvonly.html?clientId=hoge&roomId=fuga
-```
-
-## シグナリングキーを指定したい
-
-query string で指定可能です。
-
-```
-http://localhost:5000/recvonly.html?signalingKey=xxxxxxxxxxxxx
-```
-
-
-## シグナリング URL を変更したい
-
-`./main.js`
-
-の
-
-```javascript
-const signalingUrl = 'wss://ayame-labo.shiguredo.app/signaling';
-```
-
-を適宜書き換えることで、変更可能です。
 
 ## サンプル
 
-- [sendrecv(双方向送受信)](./sendrecv.html)
-- [recvonly(受信のみ)](./recvonly.html)
-- [sendonly(送信のみ)](./sendonly.html)
-- [getDisplayMedia(画面共有)](./displaymedia.html)
-- [DataChannel](./datachannel.html)
-
-### 映像コーデック の指定について
-
-sendrecv.html、recvonly.html、sendonly.html の映像コーデックの指定は、Google Chrome、Microsoft Edge でのみ有効です。
+- sendrecv(双方向送受信)
+- recvonly(受信のみ)
+- sendonly(送信のみ)
+- DataChannel
 
 ## ライセンス
 
 Apache License 2.0
 
-```
-Copyright 2019-2023, Shiguredo Inc.
-Copyright 2019, Kyoko Kadowaki aka kdxu (Original Author)
+```text
+Copyright 2019-2024, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
