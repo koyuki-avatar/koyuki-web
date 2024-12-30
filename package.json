@@ -24,6 +24,7 @@
     "@biomejs/biome": "1.9.4",
     "@playwright/test": "1.49.1",
     "@types/node": "22.10.2",
+    "@types/webrtc": "0.0.44",
     "typescript": "5.7.2",
     "vite": "6.0.6"
   },

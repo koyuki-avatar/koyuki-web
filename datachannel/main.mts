@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const roomId = `${roomIdPrefix}${roomName}`;
     conn = createConnection(signalingUrl, roomId, options, debug);
 
-    conn.on("open", async (_) => {
+    conn.on("open", async (e: unknown) => {
       if (!conn) {
         return;
       }

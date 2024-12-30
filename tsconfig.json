@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "newLine": "LF",
-    "types": ["node"],
+    "types": ["node", "webrtc"],
     "lib": ["dom", "esnext"],
     "declarationDir": "./dist",
     "outDir": "./dist",
