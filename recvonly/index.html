@@ -2,62 +2,31 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Ayame RecvOnly Sample</title>
-  <link rel="stylesheet" href="https://cdn.rawgit.com/Chalarangelo/mini.css/v3.0.1/dist/mini-default.min.css">
+  <title>Ayame Recvonly Example</title>
+  <link rel="icon" href="data:,">
 </head>
 
 <body>
   <header class="sticky row">
-    <h4>Ayame RecvOnly Sample</h4>
+    <h3>Ayame Recvonly Example</h3>
   </header>
   <div>
-    <p>ルームID
-      <input id="roomIdInput" type="text" value=""></input>
+    <p>Room ID
+      <input id="roomIdInput" type="text" style="width: 300px;"></input>
     </p>
-    <p>クライアントID
-      <input id="clientIdInput" disabled type="text" value=""></input>
+    <p>Client ID
+      <input id="clientIdInput" disabled type="text" style="width: 300px;"></input>
     </p>
-    <button onclick="startConn();">接続</button>
-    <button onclick="disconnect();">切断</button>
+    <p>
+      <button id="connect">Connect</button>
+      <button id="disconnect">Disconnect</button>
+    </p>
   </div>
-  <div style="float:left;">
-    <video id="remote-video" autoplay playsinline controls
-      style="width: 400px; height: 300px; border: 1px solid black;"></video>
+  <div style="float:left; margin-left: 20px;">
+    <video id="remote-video" autoplay playsinline
+      style="width: 400px; height: 300px; border: 2px solid rgb(0, 0, 255);"></video>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/@open-ayame/ayame-web-sdk@2022.1.0/dist/ayame.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.7.0/qs.min.js"></script>
-  <script src="./main.js"></script>
-  <script type="text/javascript">
-    const options = Ayame.defaultOptions;
-    options.clientId = clientId ? clientId : options.clientId;
-    if (signalingKey) {
-      options.signalingKey = signalingKey;
-    }
-    options.video.direction = 'recvonly';
-    options.audio.direction = 'recvonly';
-    const remoteVideo = document.querySelector('#remote-video');
-    let conn;
-    const disconnect = () => {
-      if (conn) {
-        conn.disconnect();
-      }
-    }
-    const startConn = async () => {
-      options.video.codec = videoCodec;
-      conn = Ayame.connection(signalingUrl, roomId, options, true);
-      await conn.connect(null);
-      conn.on('open', ({ authzMetadata }) => console.log(authzMetadata));
-      conn.on('disconnect', (e) => {
-        console.log(e);
-        remoteVideo.srcObject = null;
-      });
-      conn.on('addstream', (e) => {
-        remoteVideo.srcObject = e.stream;
-      });
-    };
-    document.querySelector("#roomIdInput").value = roomId;
-    document.querySelector("#clientIdInput").value = options.clientId;
-  </script>
+  <script type="module" src="./main.mts"></script>
 </body>
 
 </html>

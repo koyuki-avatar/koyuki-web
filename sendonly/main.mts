@@ -25,24 +25,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const debug = true;
 
   const options = defaultOptions;
+  options.audio.direction = "sendonly";
+  options.video.direction = "sendonly";
   options.clientId = clientId;
   options.signalingKey = signalingKey;
 
+  let localMediaStream: MediaStream | null = null;
   let conn: Connection | null = null;
 
   document.querySelector("#connect")?.addEventListener("click", async () => {
-    conn = createConnection(signalingUrl, roomId, options, debug);
-
-    conn.on("addstream", (event) => {
-      const remoteVideoElement = document.getElementById(
-        "remote-video",
-      ) as HTMLVideoElement;
-      if (remoteVideoElement) {
-        remoteVideoElement.srcObject = event.stream;
-      }
+    localMediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
     });
 
-    conn.connect(null);
+    const localVideoElement = document.getElementById(
+      "local-video",
+    ) as HTMLVideoElement;
+    if (localVideoElement) {
+      localVideoElement.srcObject = localMediaStream;
+    }
+
+    conn = createConnection(signalingUrl, roomId, options, debug);
+    conn.connect(localMediaStream);
   });
 
   document.querySelector("#disconnect")?.addEventListener("click", async () => {
@@ -50,5 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     await conn.disconnect();
+    for (const track of localMediaStream?.getTracks() ?? []) {
+      track.stop();
+    }
+    localMediaStream = null;
   });
 });
