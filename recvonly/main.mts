@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#connect")?.addEventListener("click", async () => {
     conn = createConnection(signalingUrl, roomId, options, debug);
 
-    conn.on("addstream", (event) => {
+    conn.on("addstream", (event: any) => {
       const remoteVideoElement = document.getElementById(
         "remote-video",
       ) as HTMLVideoElement;
