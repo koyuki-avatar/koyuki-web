@@ -1,12 +1,14 @@
 {
   "name": "ayame-web-sdk-samples",
-  "version": "2023.1.0",
+  "version": "2025.1.0-canary.0",
   "description": "ayame-web-sdk-samples",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test": "playwright test --project=chromium",
     "fmt": "biome format --write .",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "check": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@playwright/test": "1.49.1",
+    "@types/node": "22.10.2",
+    "typescript": "5.7.2",
     "vite": "6.0.6"
   }
 }

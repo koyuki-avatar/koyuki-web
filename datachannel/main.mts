@@ -3,16 +3,24 @@ import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
 
 document.addEventListener("DOMContentLoaded", () => {
   const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
-  const roomId = import.meta.env.VITE_AYAME_ROOM_ID;
+  const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
+  const roomName = import.meta.env.VITE_AYAME_ROOM_NAME;
   const signalingKey = import.meta.env.VITE_AYAME_SIGNALING_KEY;
 
   const clientId = crypto.randomUUID();
 
-  const roomIdInputElement = document.querySelector(
-    "#roomIdInput",
+  const roomIdPrefixElement = document.querySelector(
+    "#room-id-prefix",
+  ) as HTMLLabelElement;
+  if (roomIdPrefixElement) {
+    roomIdPrefixElement.textContent = roomIdPrefix;
+  }
+
+  const roomNameInputElement = document.querySelector(
+    "#room-name",
   ) as HTMLInputElement;
-  if (roomIdInputElement) {
-    roomIdInputElement.value = roomId;
+  if (roomNameInputElement) {
+    roomNameInputElement.value = roomName;
   }
 
   const clientIdInputElement = document.querySelector(
@@ -33,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let dataChannel: RTCDataChannel | null = null;
 
   document.querySelector("#connect")?.addEventListener("click", async () => {
+    const roomId = `${roomIdPrefix}${roomName}`;
     conn = createConnection(signalingUrl, roomId, options, debug);
 
     conn.on("open", async (_) => {
@@ -63,10 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     conn.on("datachannel", (dc: RTCDataChannel) => {
-      console.log(
-        "------------- dataChannel created ----------------",
-        dc,
-      );
+      console.log("------------- dataChannel created ----------------", dc);
       dataChannel = dc;
       dataChannel.onopen = () => {
         console.log("------------- dataChannel onopen ----------------");

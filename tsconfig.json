@@ -13,14 +13,11 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "newLine": "LF",
-    "types": ["webrtc", "node"],
-    "paths": {
-      "@/*": ["src/*"]
-    },
+    "types": ["node"],
     "lib": ["dom", "esnext"],
     "declarationDir": "./dist",
     "outDir": "./dist",
-    "rootDir": "src"
+    "rootDir": "."
   },
   "exclude": ["node_modules"]
 }
