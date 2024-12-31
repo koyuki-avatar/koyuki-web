@@ -10,9 +10,18 @@ test('sendrecv x2', async ({ browser }) => {
   await sendrecv1.click('#connect')
   await sendrecv2.click('#connect')
 
+  await expect(sendrecv1.locator('#connection-state')).toHaveAttribute(
+    'data-connection-state',
+    'connected',
+  )
+  await expect(sendrecv2.locator('#connection-state')).toHaveAttribute(
+    'data-connection-state',
+    'connected',
+  )
+
   // レース対策
-  await sendrecv1.waitForTimeout(3000)
-  await sendrecv2.waitForTimeout(3000)
+  await sendrecv1.waitForTimeout(1000)
+  await sendrecv2.waitForTimeout(1000)
 
   await sendrecv1.click('#disconnect')
   await sendrecv2.click('#disconnect')
