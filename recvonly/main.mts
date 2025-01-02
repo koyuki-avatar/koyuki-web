@@ -73,6 +73,20 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    conn.on("disconnect", (event: Event) => {
+      if (!conn) {
+        return;
+      }
+      conn = null;
+
+      const remoteVideoElement = document.getElementById(
+        "remote-video",
+      ) as HTMLVideoElement;
+      if (remoteVideoElement) {
+        remoteVideoElement.srcObject = null;
+      }
+    });
+
     conn.connect(null);
   });
 

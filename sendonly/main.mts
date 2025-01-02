@@ -76,6 +76,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    conn.on("disconnect", (event: Event) => {
+      if (!conn) {
+        return;
+      }
+      conn = null;
+      for (const track of localMediaStream?.getTracks() ?? []) {
+        track.stop();
+      }
+      localMediaStream = null;
+
+      const localVideoElement = document.getElementById(
+        "local-video",
+      ) as HTMLVideoElement;
+      if (localVideoElement) {
+        localVideoElement.srcObject = null;
+      }
+    });
+
     conn.connect(localMediaStream);
   });
 

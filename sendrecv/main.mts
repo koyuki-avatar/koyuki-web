@@ -86,6 +86,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    conn.on("disconnect", (event: Event) => {
+      if (!conn) {
+        return;
+      }
+      conn = null;
+
+      for (const track of localMediaStream?.getTracks() ?? []) {
+        track.stop();
+      }
+      localMediaStream = null;
+
+      const localVideoElement = document.getElementById(
+        "local-video",
+      ) as HTMLVideoElement;
+      if (localVideoElement) {
+        localVideoElement.srcObject = null;
+      }
+      const remoteVideoElement = document.getElementById(
+        "remote-video",
+      ) as HTMLVideoElement;
+      if (remoteVideoElement) {
+        remoteVideoElement.srcObject = null;
+      }
+    });
+
     conn.connect(localMediaStream);
   });
 
@@ -94,9 +119,5 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     await conn.disconnect();
-    for (const track of localMediaStream?.getTracks() ?? []) {
-      track.stop();
-    }
-    localMediaStream = null;
   });
 });
