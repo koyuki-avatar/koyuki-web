@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     conn = createConnection(signalingUrl, roomId, options, debug);
 
     // WebRTC が確立したら connection-state に pc.connectionState 反映する
-    conn.on("open", (event: any) => {
+    conn.on("open", (event: Event) => {
       if (!conn) {
         return;
       }
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         pc.onconnectionstatechange = (event: Event) => {
           const connectionStateElement = document.getElementById(
             "connection-state",
-          ) as HTMLDivElement;
+          ) as HTMLSpanElement;
           if (connectionStateElement) {
             // data- に connectionState を追加する
             connectionStateElement.dataset.connectionState = pc.connectionState;

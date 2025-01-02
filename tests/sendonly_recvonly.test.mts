@@ -9,8 +9,8 @@ test('sendonly recvonly', async ({ browser }) => {
 
   // channel-name を指定する
   const roomName = crypto.randomUUID()
-  await sendonly.locator('#room-name').fill(roomName)
-  await recvonly.locator('#room-name').fill(roomName)
+  await sendonly.locator('#room-name').fill(`sendonly-recvonly-${roomName}`)
+  await recvonly.locator('#room-name').fill(`sendonly-recvonly-${roomName}`)
 
   await sendonly.click('#connect')
   await recvonly.click('#connect')

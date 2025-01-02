@@ -9,8 +9,8 @@ test('sendrecv x2', async ({ browser }) => {
 
   // channel-name を指定する
   const roomName = crypto.randomUUID()
-  await sendrecv1.locator('#room-name').fill(roomName)
-  await sendrecv2.locator('#room-name').fill(roomName)
+  await sendrecv1.locator('#room-name').fill(`sendrecv-${roomName}`)
+  await sendrecv2.locator('#room-name').fill(`sendrecv-${roomName}`)
 
   await sendrecv1.click('#connect')
   await sendrecv2.click('#connect')
