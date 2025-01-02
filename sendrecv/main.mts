@@ -65,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // WebRTC が確立したら connection-state に pc.connectionState 反映する
-    conn.on("open", (event: any) => {
+    conn.on("open", (event: unknown) => {
       if (!conn) {
         return;
       }

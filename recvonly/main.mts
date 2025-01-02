@@ -51,6 +51,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // WebRTC が確立したら connection-state に pc.connectionState 反映する
+    conn.on("open", (event: any) => {
+      if (!conn) {
+        return;
+      }
+      const pc = conn.peerConnection;
+      if (pc) {
+        pc.onconnectionstatechange = (event: Event) => {
+          const connectionStateElement = document.getElementById(
+            "connection-state",
+          ) as HTMLDivElement;
+          if (connectionStateElement) {
+            // data- に connectionState を追加する
+            connectionStateElement.dataset.connectionState = pc.connectionState;
+          }
+        };
+      }
+    });
+
     conn.connect(null);
   });
 

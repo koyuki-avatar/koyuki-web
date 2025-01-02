@@ -7,17 +7,17 @@ test('sendrecv x2', async ({ browser }) => {
   await sendrecv1.goto('http://localhost:9000/sendrecv/')
   await sendrecv2.goto('http://localhost:9000/sendrecv/')
 
+  // channel-name を指定する
+  const roomName = crypto.randomUUID()
+  await sendrecv1.locator('#room-name').fill(roomName)
+  await sendrecv2.locator('#room-name').fill(roomName)
+
   await sendrecv1.click('#connect')
   await sendrecv2.click('#connect')
 
-  await expect(sendrecv1.locator('#connection-state')).toHaveAttribute(
-    'data-connection-state',
-    'connected',
-  )
-  await expect(sendrecv2.locator('#connection-state')).toHaveAttribute(
-    'data-connection-state',
-    'connected',
-  )
+  // connection-stateがconnectedになるのを待つ
+  await expect(sendrecv1.locator('#connection-state')).toHaveAttribute('data-connection-state', 'connected', { timeout: 5000 })
+  await expect(sendrecv2.locator('#connection-state')).toHaveAttribute('data-connection-state', 'connected', { timeout: 5000 })
 
   // レース対策
   await sendrecv1.waitForTimeout(1000)
