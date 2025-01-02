@@ -10,17 +10,7 @@
 
 このサンプルは最小限になっており、 `.env.local` に設定した環境変数のみを利用します。
 
-## 環境変数を設定する
-
-```bash
-# cp .env.example .env.local
-VITE_AYAME_SIGNALING_URL=wss://ayame.example.com/signaling
-VITE_AYAME_ROOM_ID_PREFIX=ayame@
-VITE_AYAME_ROOM_NAME=examples
-VITE_AYAME_SIGNALING_KEY=ayame-signaling-key
-```
-
-### Ayame Labo を利用する場合
+## Ayame Labo を利用する
 
 - シグナリングキーは [Ayame Labo](https://ayame-labo.shiguredo.app/) のダッシュボードから取得できます
 - ルーム ID のプレフィックスは GitHub のログイン名に `@` を付与したものにします
