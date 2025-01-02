@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "playwright test --project=chromium --workers=1",
+    "test": "playwright test --project=chromium",
     "fmt": "biome format --write .",
     "lint": "biome lint .",
     "check": "tsc --noEmit"
