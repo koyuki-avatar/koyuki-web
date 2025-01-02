@@ -6,17 +6,28 @@
 
 利用前に <https://github.com/shiguredo/oss> をお読みください。
 
-## オンラインサンプル
+## Ayame Web SDK サンプルについて
 
-<https://openayame.github.io/ayame-web-sdk-examples/index.html>
+このサンプルは最小限になっており、 `.env.local` に設定した環境変数のみを利用します。
 
 ## 環境変数を設定する
 
 ```bash
 # cp .env.example .env.local
 VITE_AYAME_SIGNALING_URL=wss://ayame.example.com/signaling
-VITE_AYAME_ROOM_ID=ayame-room-id
+VITE_AYAME_ROOM_ID_PREFIX=ayame@
+VITE_AYAME_ROOM_NAME=examples
 VITE_AYAME_SIGNALING_KEY=ayame-signaling-key
+```
+
+### Ayame Labo を利用する場合
+
+```bash
+# cp .env.example .env.local
+VITE_AYAME_SIGNALING_URL=wss://ayame-labo.shiguredo.app/signaling
+VITE_AYAME_ROOM_ID_PREFIX={GitHub ログイン名}@
+VITE_AYAME_ROOM_NAME={好きな文字列}
+VITE_AYAME_SIGNALING_KEY={Ayame Labo のシグナリングキー}
 ```
 
 ## 起動する
@@ -28,10 +39,10 @@ pnpm dev
 
 ## サンプル
 
-- sendrecv(双方向送受信)
-- recvonly(受信のみ)
-- sendonly(送信のみ)
-- DataChannel
+- 双方向送受信(sendrecv)
+- 送信のみ(sendonly)
+- 受信のみ(recvonly)
+- データチャネル(datachannel)
 
 ## ライセンス
 
