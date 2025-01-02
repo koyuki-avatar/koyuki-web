@@ -22,12 +22,16 @@ VITE_AYAME_SIGNALING_KEY=ayame-signaling-key
 
 ### Ayame Labo を利用する場合
 
+- シグナリングキーは [Ayame Labo](https://ayame-labo.shiguredo.app/) のダッシュボードから取得できます
+- ルーム ID のプレフィックスは GitHub のログイン名に `@` を付与したものにします
+- ルーム名は好きな文字列を指定してください
+
 ```bash
 # cp .env.example .env.local
 VITE_AYAME_SIGNALING_URL=wss://ayame-labo.shiguredo.app/signaling
-VITE_AYAME_ROOM_ID_PREFIX={GitHub ログイン名}@
+VITE_AYAME_ROOM_ID_PREFIX={GitHubのログイン名}@
 VITE_AYAME_ROOM_NAME={好きな文字列}
-VITE_AYAME_SIGNALING_KEY={Ayame Labo のシグナリングキー}
+VITE_AYAME_SIGNALING_KEY={シグナリングキー}
 ```
 
 ## 起動する
