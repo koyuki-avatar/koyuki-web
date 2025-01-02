@@ -4,74 +4,46 @@
 
 ## 時雨堂のオープンソースソフトウェアについて
 
-利用前に https://github.com/shiguredo/oss をお読みください。
+利用前に <https://github.com/shiguredo/oss> をお読みください。
 
-## オンラインサンプル
+## Ayame Web SDK サンプルについて
 
-https://openayame.github.io/ayame-web-sdk-samples/index.html
+このサンプルは最小限になっており、 `.env.local` に設定した環境変数のみを利用します。
 
-## npm install でセットアップ
+## Ayame Labo を利用する
 
-```
-npm install
-```
+- シグナリングキーは [Ayame Labo](https://ayame-labo.shiguredo.app/) のダッシュボードから取得できます
+- ルーム ID のプレフィックスは GitHub のログイン名に `@` を付与したものにします
+- ルーム名は好きな文字列を指定してください
 
-## npm run dev で起動
-
-```
-npm run dev
-```
-
-localhost:5000 で閲覧可能です。
-
-## clientId, roomId  を指定したい
-
-query string で指定可能です。
-
-```
-http://localhost:5000/recvonly.html?clientId=hoge&roomId=fuga
+```bash
+# cp .env.example .env.local
+VITE_AYAME_SIGNALING_URL=wss://ayame-labo.shiguredo.app/signaling
+VITE_AYAME_ROOM_ID_PREFIX={GitHubのログイン名}@
+VITE_AYAME_ROOM_NAME={好きな文字列}
+VITE_AYAME_SIGNALING_KEY={シグナリングキー}
 ```
 
-## シグナリングキーを指定したい
+## 起動する
 
-query string で指定可能です。
-
+```bash
+pnpm install
+pnpm dev
 ```
-http://localhost:5000/recvonly.html?signalingKey=xxxxxxxxxxxxx
-```
-
-
-## シグナリング URL を変更したい
-
-`./main.js`
-
-の
-
-```javascript
-const signalingUrl = 'wss://ayame-labo.shiguredo.app/signaling';
-```
-
-を適宜書き換えることで、変更可能です。
 
 ## サンプル
 
-- [sendrecv(双方向送受信)](./sendrecv.html)
-- [recvonly(受信のみ)](./recvonly.html)
-- [sendonly(送信のみ)](./sendonly.html)
-- [getDisplayMedia(画面共有)](./displaymedia.html)
-- [DataChannel](./datachannel.html)
-
-### 映像コーデック の指定について
-
-sendrecv.html、recvonly.html、sendonly.html の映像コーデックの指定は、Google Chrome、Microsoft Edge でのみ有効です。
+- 双方向送受信(sendrecv)
+- 送信のみ(sendonly)
+- 受信のみ(recvonly)
+- データチャネル(datachannel)
 
 ## ライセンス
 
 Apache License 2.0
 
-```
-Copyright 2019-2023, Shiguredo Inc.
-Copyright 2019, Kyoko Kadowaki aka kdxu (Original Author)
+```text
+Copyright 2019-2024, Shiguredo Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

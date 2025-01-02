@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "strict": true,
+    "declaration": true,
+    "strictNullChecks": true,
+    "importHelpers": true,
+    "moduleResolution": "Bundler",
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "newLine": "LF",
+    "types": ["node", "webrtc"],
+    "lib": ["dom", "esnext"],
+    "declarationDir": "./dist",
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "exclude": ["node_modules"]
+}
