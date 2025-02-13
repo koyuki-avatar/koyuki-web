@@ -3,6 +3,8 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   root: resolve(__dirname),
+  // NOTE:baseをデプロイ先のURLに変える
+  base: "https://dev.rittai.org/dist/",
   build: {
     rollupOptions: {
       input: {

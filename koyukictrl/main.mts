@@ -5,6 +5,12 @@ import type {
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
 import { Dualshock4 } from 'webhid-ds4'
 
+declare global {
+    interface Window {
+        JoyStick: any;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
     const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
@@ -187,9 +193,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // JoyStick like 
-    let joy = new JoyStick('joyDiv');
+
+    const joy = new window.JoyStick('joyDiv');
     let maxspeedX = document.getElementById("maxspeed-x").value; 
     let maxspeedZ = document.getElementById("maxspeed-z").value;
+
     document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
         maxspeedX = document.getElementById("maxspeed-x").value;
         maxspeedZ = document.getElementById("maxspeed-z").value;

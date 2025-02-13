@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "include": ["sendrecv/**", "sendonly/**", "recvonly/**", "datachannel/**"]
+    "include": ["sendrecv/**", "sendonly/**", "recvonly/**", "datachannel/**, sendrecvdata/**, koyukictrl/**"]
   },
   "organizeImports": {
     "enabled": true
