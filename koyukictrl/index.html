@@ -1,0 +1,55 @@
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <title>Koyuki Control</title>
+  <link rel="icon" href="data:,">
+  <script src="joy.js"></script>
+</head>
+
+<body>
+  <header class="sticky row">
+    <h3>Koyuki Control</h3>
+  </header>
+  <span id="connection-state" data-connection-state="undefined"></span>
+  <div>
+    <p>Room ID
+      <label id="room-id-prefix" disabled></label>
+      <input id="room-name" type="text" style="width: 300px;"></input>
+      <button id="connect">Connect</button>
+      <button id="disconnect">Disconnect</button>
+    </p>
+  </div>
+  <div style="float:left;">
+    <video id="remote-video" autoplay playsinline
+      style="width: 600px; height: 450px; border: 2px solid rgb(0, 0, 255);"></video>
+  </div>
+  <div style="float:left; margin-left: 20px;">
+    <video id="local-video" muted autoplay playsinline
+      style="width: 200px; height: 150px; border: 2px solid rgb(255, 0, 0); transform: scaleX(-1);"></video>
+  </div>
+  <div style="float:left; margin-left: 20px;">
+    <div id="joyDiv" style="width:200px;height:200px;margin-bottom:20px;margin-top: 20px; border: 1px solid #ff0000;"></div>
+  </div>
+  <div style="float:left; margin-top: 10px;">
+    <p>Max Speed [m/s] (x,z)=(
+    <input id="maxspeed-x" type="number" value="1.0" style="width: 100px;"></input>,
+    <input id="maxspeed-z" type="number" value="1.0" style="width: 100px;"></input>)
+    <button id="set-maxspeed">Set</button>
+    </p>
+<!--    <p> 送信するメッセージ
+      <input id="message" type="text" value="🐶"></input>
+    </p>
+    <button id="send-message">送信</button>
+-->
+    <p>WebHID Dualshock4 <button id="init-ds4">Use DS4</button></p>
+    <p>Signaling Client ID
+      <input id="client-id-input" type="text" style="width: 300px;"></input>
+    </p>
+    <p> Received Message (for debug) </p>
+    <textarea style="width: 400px; Height: 100px;" id="received-messages" disabled type="text" value=""></textarea>
+  </div>
+  <script type="module" src="./main.mts"></script>
+</body>
+
+</html>

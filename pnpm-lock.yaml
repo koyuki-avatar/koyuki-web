@@ -11,6 +11,9 @@ importers:
       '@open-ayame/ayame-web-sdk':
         specifier: 2025.1.0-canary.2
         version: 2025.1.0-canary.2
+      webhid-ds4:
+        specifier: ^1.0.3
+        version: 1.0.3
     devDependencies:
       '@biomejs/biome':
         specifier: 1.9.4
@@ -349,6 +352,15 @@ packages:
   '@types/webrtc@0.0.44':
     resolution: {integrity: sha512-4BJZdzrApNFeuXgucyqs24k69f7oti3wUcGEbFbaV08QBh7yEe3tnRRuYXlyXJNXiumpZujiZqUZZ2/gMSeO0g==}
 
+  base64-js@1.5.1:
+    resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+
+  buffer@5.7.1:
+    resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
+
+  crc@3.8.0:
+    resolution: {integrity: sha512-iX3mfgcTMIq3ZKLIsVFAbv7+Mc10kxabAGQb8HvjA1o3T1PIYprbakQ65d3I+2HGHt6nSKkM9PYjgoJO2KcFBQ==}
+
   esbuild@0.24.2:
     resolution: {integrity: sha512-+9egpBW8I3CD5XPe0n6BfT5fxLzxrlDzqydF3aviG+9ni1lDC/OvMHcxqEFV0+LANZG5R1bFMWfUrjVsdwxJvA==}
     engines: {node: '>=18'}
@@ -363,6 +375,9 @@ packages:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+
+  ieee754@1.2.1:
+    resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
 
   nanoid@3.3.8:
     resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
@@ -442,6 +457,9 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  webhid-ds4@1.0.3:
+    resolution: {integrity: sha512-hZExe7k4LQaAdkXHlgBK1vkqeH58P0Vr1nZOUkuGib+ZX+gK3ExURI5tZxREY8du0uf+lW4OzQOwoF0jCi4xVA==}
 
 snapshots:
 
@@ -626,6 +644,17 @@ snapshots:
 
   '@types/webrtc@0.0.44': {}
 
+  base64-js@1.5.1: {}
+
+  buffer@5.7.1:
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+
+  crc@3.8.0:
+    dependencies:
+      buffer: 5.7.1
+
   esbuild@0.24.2:
     optionalDependencies:
       '@esbuild/aix-ppc64': 0.24.2
@@ -659,6 +688,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  ieee754@1.2.1: {}
 
   nanoid@3.3.8: {}
 
@@ -717,3 +748,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.13.1
       fsevents: 2.3.3
+
+  webhid-ds4@1.0.3:
+    dependencies:
+      crc: 3.8.0

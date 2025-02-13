@@ -11,6 +11,8 @@ export default defineConfig({
         sendonly: resolve(__dirname, "sendonly/index.html"),
         recvonly: resolve(__dirname, "recvonly/index.html"),
         datachannel: resolve(__dirname, "datachannel/index.html"),
+        sendrecvdata: resolve(__dirname, "sendrecvdata/index.html"),
+        koyukictrl: resolve(__dirname, "koyukictrl/index.html"),
       },
     },
   },
