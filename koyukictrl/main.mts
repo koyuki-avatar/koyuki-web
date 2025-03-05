@@ -14,7 +14,7 @@ declare global {
 document.addEventListener("DOMContentLoaded", () => {
     const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
     const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
-    const roomName = import.meta.env.VITE_AYAME_ROOM_NAME;
+    let roomName = import.meta.env.VITE_AYAME_ROOM_NAME;
     const signalingKey = import.meta.env.VITE_AYAME_SIGNALING_KEY;
 
     const clientId = crypto.randomUUID();
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         roomIdPrefixElement.textContent = roomIdPrefix;
     }
 
-    const roomNameInputElement = document.querySelector(
+    let roomNameInputElement = document.querySelector(
         "#room-name",
     ) as HTMLInputElement;
     if (roomNameInputElement) {
@@ -39,6 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (clientIdInputElement) {
         clientIdInputElement.value = clientId;
     }
+
+    document.querySelector("#update-id")?.addEventListener("click", () => {
+        roomName = document.getElementById("room-name").value;
+        console.log(roomNameInputElement.value);
+        roomNameInputElement = document.querySelector(
+            "#room-name",
+        ) as HTMLInputElement;
+        if (roomNameInputElement) {
+            roomNameInputElement.value = roomName;
+        }
+    });
 
     const debug = true;
 
@@ -197,10 +208,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const joy = new window.JoyStick('joyDiv');
     let maxspeedX = document.getElementById("maxspeed-x").value; 
     let maxspeedZ = document.getElementById("maxspeed-z").value;
+    let divmaxX = 100.0 / maxspeedX;
+    let divmaxZ = 100.0 / maxspeedZ;
 
     document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
         maxspeedX = document.getElementById("maxspeed-x").value;
         maxspeedZ = document.getElementById("maxspeed-z").value;
+        divmaxX = 100.0 / maxspeedX;
+        divmaxZ = 100.0 / maxspeedZ;
+
+        console.log(maxspeedX,", ",maxspeedZ)
     });
 
     function sendCtrlBase(xin: number, zin: number) {
@@ -214,9 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
     function sendCtrlJoy() {
-        let divmaxX = 100.0 / maxspeedX;
-        let divmaxZ = 100.0 / maxspeedZ;
-        sendCtrlBase(Math.round(joy.GetY() *100/ divmaxZ)/100, Math.round(joy.GetX() *100/ divmaxZ)/100)
+        sendCtrlBase(Math.round(joy.GetY() *100/ divmaxX)/100, Math.round(joy.GetX() *100/ divmaxZ)/100)
     }
 
     let isds4av = false;
@@ -231,9 +246,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     function sendCtrlDS4() {
         // TODO: 値の範囲を反映
-        let divmaxX = 100.0 / maxspeedX;
         let divmaxZ = 100.0 / maxspeedZ;
-        sendCtrlBase(Math.round(DS4.state.axes.leftStickY *100/ divmaxZ)/100, Math.round(DS4.state.axes.leftStickX *100/ divmaxZ)/100)
+        sendCtrlBase(Math.round((-1)*DS4.state.axes.leftStickY * maxspeedX * 100)/100, Math.round(DS4.state.axes.leftStickX * maxspeedZ *100)/100)
     }
 
     function sendCtrl() {
