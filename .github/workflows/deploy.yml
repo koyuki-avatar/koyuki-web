@@ -10,7 +10,7 @@ jobs:
       - name: ssh deploy
         uses: appleboy/ssh-actiion@mater
         with:
-          host: ${{ sercets.SSH_HOST }}
+          host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIV_KEY }}
           port: ${{ secrets.SSH_PORT }}
