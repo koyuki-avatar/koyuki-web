@@ -15,7 +15,6 @@ jobs:
           key: ${{ secrets.SSH_PRIV_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo $HOME
             export NVM_DIR="$HOME/.nvm"
             source "$NVM_DIR/nvm.sh"
             nvm use --lts
