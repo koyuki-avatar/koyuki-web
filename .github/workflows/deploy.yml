@@ -15,6 +15,7 @@ jobs:
           key: ${{ secrets.SSH_PRIV_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            source ~/.bashrc
             cd ~/ayame-web-sdk-examples/
             git pull origin main
             pnpm install
