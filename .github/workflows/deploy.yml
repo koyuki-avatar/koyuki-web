@@ -15,7 +15,11 @@ jobs:
           key: ${{ secrets.SSH_PRIV_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            source ~/.bashrc
+            echo $HOME
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+            nvm use --lts
+            export PATH="$HOME/.nvm/versions/node/v22.14.0/bin/pnpm"
             cd ~/ayame-web-sdk-examples/
             git pull origin main
             pnpm install
