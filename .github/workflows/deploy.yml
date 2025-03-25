@@ -19,7 +19,7 @@ jobs:
             export NVM_DIR="$HOME/.nvm"
             source "$NVM_DIR/nvm.sh"
             nvm use --lts
-            export PATH="$HOME/.nvm/versions/node/v22.14.0/bin/pnpm"
+            export PATH="$HOME/.nvm/versions/node/v22.14.0/bin/pnpm:$PATH"
             cd ~/ayame-web-sdk-examples/
             git pull origin main
             pnpm install
