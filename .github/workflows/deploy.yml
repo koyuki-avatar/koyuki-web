@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ssh deploy
-        uses: appleboy/ssh-actiion@mater
+        uses: appleboy/ssh-action@mater
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
