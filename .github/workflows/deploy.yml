@@ -1,0 +1,23 @@
+name: deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ssh deploy
+        uses: appleboy/ssh-actiion@mater
+        with:
+          host: ${{ sercets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIV_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ~/ayame-web-sdk-examples/
+            git pull origin main
+            pnpm install
+            pnpm build
+            cp -r ./dist ~/server/nginx/html
+          
