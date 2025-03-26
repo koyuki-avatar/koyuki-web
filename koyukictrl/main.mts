@@ -3,7 +3,7 @@ import type {
     Connection,
 } from "@open-ayame/ayame-web-sdk";
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
-import { Dualshock4 } from 'webhid-ds4'
+
 
 declare global {
     interface Window {
@@ -11,6 +11,7 @@ declare global {
     }
 }
 
+// WebRTC
 document.addEventListener("DOMContentLoaded", () => {
     const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
     const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
@@ -178,22 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
         conn.connect(localMediaStream);
     });
 
-    // メッセージ送信
-    //  document
-    //    .querySelector("#send-message")
-    //    ?.addEventListener("click", async () => {
-    //      if (!dataChannel) {
-    //        console.log("------------- dataChannel not found ----------------");
-    //        return;
-    //      }
-    //      const message = document.querySelector("#message") as HTMLInputElement;
-    //      if (!message) {
-    //        console.log("------------- message not found ----------------");
-    //        return;
-    //      }
-    //      dataChannel.send(message.value);
-    //      console.log("------------- send message ----------------", message.value);
-    //    });
 
     document.querySelector("#disconnect")?.addEventListener("click", async () => {
         if (!conn) {
@@ -202,59 +187,75 @@ document.addEventListener("DOMContentLoaded", () => {
         await conn.disconnect();
     });
 
-
-    // JoyStick like 
-
-    const joy = new window.JoyStick('joyDiv');
-    let maxspeedX = document.getElementById("maxspeed-x").value; 
-    let maxspeedZ = document.getElementById("maxspeed-z").value;
-    let divmaxX = 100.0 / maxspeedX;
-    let divmaxZ = 100.0 / maxspeedZ;
-
-    document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
-        maxspeedX = document.getElementById("maxspeed-x").value;
-        maxspeedZ = document.getElementById("maxspeed-z").value;
-        divmaxX = 100.0 / maxspeedX;
-        divmaxZ = 100.0 / maxspeedZ;
-
-        console.log(maxspeedX,", ",maxspeedZ)
-    });
-
+    // send control over datachannel
     function sendCtrlBase(xin: number, zin: number) {
         if (!dataChannel) {
             console.log("sendCtrlBase: datachannel not found");
         } else {
-            let sendjson = JSON.stringify({x: xin, z: zin});
+            const xtmp = xin / 3.6; // km/h -> m/s
+            const xsend = (Math.round(xtmp*maxspeedX*100)/100);
+            const zsend = (Math.round(zin*maxspeedZ*100)/100);
+
+            let sendjson = JSON.stringify({x: xsend, z: zsend});
             dataChannel.send(sendjson);
             console.log("sendCtrlBase: sent: ", sendjson);
         }
-
     }
+
+    // JoyStick like 
+    const joy = new window.JoyStick('joyDiv');
+    let maxspeedX = document.getElementById("maxspeed-x").value; 
+    let maxspeedZ = document.getElementById("maxspeed-z").value;
+
+    document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
+        maxspeedX = document.getElementById("maxspeed-x").value;
+        maxspeedZ = document.getElementById("maxspeed-z").value;
+
+        console.log("maxspeed: ", maxspeedX,", ",maxspeedZ)
+    });
+
     function sendCtrlJoy() {
-        sendCtrlBase(Math.round(joy.GetY() *100/ divmaxX)/100, Math.round(joy.GetX() *100/ divmaxZ)/100)
+        sendCtrlBase(joy.GetY()/100, -joy.GetX()/100);
     }
 
-    let isds4av = false;
-    let DS4;
-    // DS4
-    document.querySelector("#init-ds4")?.addEventListener("click",
-        async () => {
-            DS4 = new DualShock4();
-            await DS4.init();
-            await DS4.lightbar.setColorRGB(0,128,0);
-            isds4av = true;
-        });
-    function sendCtrlDS4() {
-        // TODO: 値の範囲を反映
-        let divmaxZ = 100.0 / maxspeedZ;
-        sendCtrlBase(Math.round((-1)*DS4.state.axes.leftStickY * maxspeedX * 100)/100, Math.round(DS4.state.axes.leftStickX * maxspeedZ *100)/100)
+    // Gamepad
+    let isgamepad = false;
+    const gamepadcheckbox = document.querySelector("#use-gamepad");
+    gamepadcheckbox.addEventListener("change", () => {
+        if (gamepadcheckbox.checked) {
+            isgamepad = true;
+        } else {
+            isgamepad = false;
+            document.getElementById("status-gamepad").innerHTML = "Disabled";
+        }
+    });
+    window.addEventListener('DOMContentLoaded', () => {
+        gamepadcheckbox.checked = false;
+    });
+
+    function sendCtrlGamepad() {
+        const deadzone = 0.15;
+        const gamepads = navigator.getGamepads();
+        const gp = gamepads[0];
+        if (gp) {
+            const rawx = gp.axes[0]; // left: -1, right: 1
+            const rawy = gp.axes[1]; // top: -1, bottom: 1
+            const x = (Math.abs(rawx) < deadzone) ? 0 : rawx;
+            const y = (Math.abs(rawy) < deadzone) ? 0 : rawy;
+            const killbutton = gp.buttons[4].pressed || gp.buttons[5].pressed;
+            if (killbutton) sendCtrlBase(0,0);
+            else sendCtrlBase(-y, -x);
+            document.getElementById("status-gamepad").innerHTML = "Connected: " + gamepads[0]?.id;
+        } else {
+            document.getElementById("status-gamepad").innerHTML = "Disconnected; Press Any Button!";
+        }
     }
 
     function sendCtrl() {
-        if(!isds4av) {
-            sendCtrlJoy();
+        if(isgamepad) {
+            sendCtrlGamepad();
         } else {
-            sendCtrlDS4();
+            sendCtrlJoy();
         }
     }
     // TODO: 周期をちゃんと決める
