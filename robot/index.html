@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <title>Koyuki Control</title>
+  <link rel="icon" href="data:,">
+  <script src="koyukictrl/joy.js"></script>
+</head>
+
+<body>
+  <header class="sticky row">
+    <h3>Koyuki Control(ロボット側)</h3>
+  </header>
+  <div>
+    <p>Room ID
+      <label id="room-id-prefix" disabled></label>
+      <input id="room-name" type="text" style="width: 300px;"></input>
+      <button id="update-id">Update ID</button>
+      <button id="connect">Connect</button>
+      <button id="disconnect">Disconnect</button>
+    </p>
+  </div>
+  <div style="float:left;">
+    <video id="remote-video-A" autoplay playsinline
+      style="width: 300px; height: 225px; border: 2px solid rgb(0, 0, 255);"></video>
+    <video id="remote-video-B" autoplay playsinline
+      style="width: 300px; height: 225px; border: 2px solid rgb(255, 0, 0);"></video>
+  </div>
+  <div style="float:left; margin-left: 20px;">
+    <video id="local-video-A" muted autoplay playsinline
+      style="width: 150px; height: 113px; border: 2px solid rgb(0, 0, 255); transform: scaleX(-1);"></video>
+    <video id="local-video-B" muted autoplay playsinline
+      style="width: 150px; height: 113px; border: 2px solid rgb(255, 0, 0); transform: scaleX(-1);"></video>
+  </div>
+  <div style="float:left; margin-left: 20px;">
+    <div id="joyDiv" style="width:200px;height:200px;margin-bottom:20px;margin-top: 20px; border: 1px solid #ff0000;"></div>
+  </div>
+  <div>
+    <input id="qr-code-input" type="file" />
+    <button id="send-qr-code">QRコードを送信 (Connection C)</button>
+    <div id="received-images">
+      <h3>受信したQRコード</h3>
+    </div>
+  </div>
+  <script type="module" src="./main.mts"></script>
+</body>
+
+</html>

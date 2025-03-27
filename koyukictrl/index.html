@@ -15,7 +15,12 @@
   <div>
     <p>Room ID
       <label id="room-id-prefix" disabled></label>
-      <input id="room-name" type="text" style="width: 300px;"></input>
+      <input id="room-name" type="text" style="width: 200px;"></input>
+      <select id="resolution-selector">
+          <option value="640x480" selected>640x480</option>
+          <option value="360x240">360x240</option>
+          <option value="144x108">144x108</option>
+      </select>
       <button id="update-id">Update ID</button>
       <button id="connect">Connect</button>
       <button id="disconnect">Disconnect</button>

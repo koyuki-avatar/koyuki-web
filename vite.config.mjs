@@ -15,6 +15,8 @@ export default defineConfig({
         datachannel: resolve(__dirname, "datachannel/index.html"),
         sendrecvdata: resolve(__dirname, "sendrecvdata/index.html"),
         koyukictrl: resolve(__dirname, "koyukictrl/index.html"),
+        ctrl: resolve(__dirname, "ctrl/index.html"),
+        robot: resolve(__dirname, "robot/index.html"),
       },
     },
   },
