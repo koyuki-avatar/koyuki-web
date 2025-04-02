@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Helper function for setting up WebRTC connections
   const getMediaStream = async (): Promise<MediaStream> => {
     return await navigator.mediaDevices.getUserMedia({
+      audio: true,
       video: {
         width: videoResolution.width,
         height: videoResolution.height,
