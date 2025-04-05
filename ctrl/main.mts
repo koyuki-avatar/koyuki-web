@@ -62,20 +62,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     let maxspeedX = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
     let maxspeedZ = parseFloat((document.getElementById("maxspeed-z") as HTMLInputElement).value);
 
+    const handleDataChannelAReceived = (messageEvent: MessageEvent) => {
+        console.log("Received control information:", messageEvent.data);
+        const receivedMessages = document.getElementById("received-messages") as HTMLTextAreaElement;
+        if (receivedMessages) {
+            receivedMessages.value += `Control: ${messageEvent.data}\n`;
+        }
+
+    }
+
     // Connection A (Front camera with control via DataChannel)
     const connectA = async () => {
         connA = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-A`, options);
-
-        const localMediaStreamA = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480 },
-            audio: true,
-        });
-
-        const localVideoA = document.getElementById("local-video-A") as HTMLVideoElement;
-        if (localVideoA) {
-            localVideoA.srcObject = localMediaStreamA;
-            localVideoA.play();
-        }
 
         connA.on("addstream", (event: AyameAddStreamEvent) => {
             const remoteVideo = document.getElementById("remote-video-A") as HTMLVideoElement;
@@ -94,16 +92,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 // Handle incoming messages
                 dataChannelA.onmessage = (messageEvent: MessageEvent) => {
-                    console.log("Received control information:", messageEvent.data);
-                    const receivedMessages = document.getElementById("received-messages") as HTMLTextAreaElement;
-                    if (receivedMessages) {
-                        receivedMessages.value += `Control: ${messageEvent.data}\n`;
-                    }
+                    handleDataChannelAReceived();
                 };
             }
         });
 
-        connA.connect(localMediaStreamA);
+        connA.on("datachannel", (dc: RTCDataChannel) => {
+            dataChannelA = dc;
+            dataChannelA.onopen = () => {
+                console.log("DataChannel A opened:", dataChannelA);
+            };
+            dataChannelA.onmessage = (messageEvent: MessageEvent) => {
+                handleDataChannelAReceived();
+            };
+        });
+
+        connA.connect(null);
     };
 
     // Joystick setup
@@ -121,7 +125,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     function sendCtrlBase(xin: number, zin: number) {
-        if (!dataChannelA) {
+        if (!dataChannelA || dataChannelA.readyState !== 'open') {
             console.error("DataChannel A is not available.");
             return;
         }
@@ -176,33 +180,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }, 50);
 
-
-    // Connect button
-    document.getElementById("connect")?.addEventListener("click", async () => {
-        await connectA();
-        console.log("Connection A established.");
-    });
-
-    // Disconnect button
-    document.getElementById("disconnect")?.addEventListener("click", async () => {
-        if (connA) {
-            await connA.disconnect();
-            console.log("Connection A disconnected.");
-        }
-    });
-
-    // Connection B (後方カメラ + 音声)
+    // Connection B (後方カメラ)
     const connectB = async () => {
         connB = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-B`, options);
-
-        const localMediaStreamB = await getMediaStream();
-
-        // Display local video and audio feed
-        const localVideoB = document.getElementById("local-video-B") as HTMLVideoElement;
-        if (localVideoB) {
-            localVideoB.srcObject = localMediaStreamB;
-            localVideoB.play();
-        }
 
         connB.on("addstream", (event: AyameAddStreamEvent) => {
             const remoteVideo = document.getElementById("remote-video-B") as HTMLVideoElement;
@@ -211,22 +191,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
 
-        connB.connect(localMediaStreamB); // Attach local media stream to Connection B
+        connB.connect(null); // Attach local media stream to Connection B
     };
 
-
-    // Connection C (映像送信専用＋データチャンネル)
+    // Connection C (映像送信＋データチャンネル)
     const connectC = async () => {
         connC = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-C`, options);
 
         // 映像の送信用メディアストリームを設定
-        const localMediaStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                width: videoResolution.width,
-                height: videoResolution.height,
-            },
-            audio: false, // 映像のみ送信
-        });
+        const localMediaStream = await getMediaStream();
 
         const localVideo = document.getElementById("local-video-C") as HTMLVideoElement;
         if (localVideo) {
@@ -240,18 +213,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             // データチャンネルの設定
             dataChannelC = await connC.createDataChannel("channelC", {});
             if (dataChannelC) {
+                console.log("DataChannel C created:", dataChannelA);
                 dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-                    console.log("Received message:", messageEvent.data);
-                    const receivedImages = document.getElementById("received-images") as HTMLDivElement;
-                    if (messageEvent.data instanceof ArrayBuffer) {
-                        const blob = new Blob([messageEvent.data], { type: "image/png" });
-                        const img = document.createElement("img");
-                        img.src = URL.createObjectURL(blob);
-                        img.style.maxWidth = "300px";
-                        receivedImages.appendChild(img);
-                    }
+                    // do nothing
                 };
             }
+        });
+
+        connC.on("datachannel", (dc: RTCDataChannel) => {
+            dataChannelC = dc;
+            dataChannelC.onopen = () => {
+                console.log("DataChannel C opened:", dataChannelC);
+            };
+            dataChannelC.onmessage = (messageEvent: MessageEvent) => {
+                // do nothing
+            };
         });
 
         // ローカルメディアストリームを接続
