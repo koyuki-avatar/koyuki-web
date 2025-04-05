@@ -27,41 +27,47 @@
       <button id="disconnect">Disconnect</button>
     </p>
   </div>
-  <div style="float:left;">
-    <video id="remote-video-A" autoplay playsinline
-      style="width: 300px; height: 225px; border: 2px solid rgb(0, 0, 255);"></video>
-    <video id="remote-video-B" autoplay playsinline
-      style="width: 300px; height: 225px; border: 2px solid rgb(255, 0, 0);"></video>
-  </div>
-  <div style="float:left; margin-left: 20px;">
-    <video id="local-video-A" muted autoplay playsinline
-      style="width: 150px; height: 113px; border: 2px solid rgb(0, 0, 255); transform: scaleX(-1);"></video>
-    <video id="local-video-B" muted autoplay playsinline
-      style="width: 150px; height: 113px; border: 2px solid rgb(255, 0, 0); transform: scaleX(-1);"></video>
-  </div>
-  <div style="float:left; margin-left: 20px;">
-    <div id="joyDiv" style="width:200px;height:200px;margin-bottom:20px;margin-top: 20px; border: 1px solid #ff0000;"></div>
-  </div>
-  <div style="float:left; margin-top: 10px;">
-    <p>Max Speed (x[km/h], z[rad/s])=(
-      <input id="maxspeed-x" type="number" value="3.0" style="width: 100px;"></input>,
-      <input id="maxspeed-z" type="number" value="1.0" style="width: 100px;"></input>)
-      <button id="set-maxspeed">Set</button>
-    </p>
-    <p>Use Gamepad <input type="checkbox" id="use-gamepad"> Status: <span id="status-gamepad">Disabled</span></p>
-    <p>Signaling Client ID
-      <input id="client-id-input" type="text" style="width: 300px;"></input>
-    </p>
-    <p>Received Message (for debug)</p>
-    <textarea style="width: 400px; height: 100px;" id="received-messages" disabled></textarea>
-  </div>
-  <div>
-    <input id="qr-code-input" type="file" />
-    <button id="send-qr-code">QRコードを送信 (Connection C)</button>
-    <div id="received-images">
-      <h3>受信したQRコード</h3>
+
+  <!-- Received videos section with two-tier layout -->
+  <div style="display: flex; justify-content: space-around; align-items: flex-start;">
+    <div>
+      <video id="remote-video-A" autoplay playsinline
+        style="width: 400px; height: 300px; border: 2px solid rgb(0, 0, 255);"></video>
+    </div>
+    <div>
+      <video id="remote-video-B" autoplay playsinline
+        style="width: 400px; height: 300px; border: 2px solid rgb(255, 0, 0);"></video>
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: space-between; height: 300px;">
+      <div style="margin-bottom: 20px;">
+        <p>Max Speed (x[km/h], z[rad/s])=(
+          <input id="maxspeed-x" type="number" value="3.0" style="width: 100px;"></input>,
+          <input id="maxspeed-z" type="number" value="1.0" style="width: 100px;"></input>)
+          <button id="set-maxspeed">Set</button>
+        </p>
+        <p>Use Gamepad <input type="checkbox" id="use-gamepad"> Status: <span id="status-gamepad">Disabled</span></p>
+        <p>Signaling Client ID
+          <input id="client-id-input" type="text" style="width: 300px;"></input>
+        </p>
+      </div>
+      <div>
+        <div id="joyDiv" style="width:200px;height:200px; border: 1px solid #ff0000;"></div>
+      </div>
     </div>
   </div>
+
+  <!-- Local video and QR code input -->
+  <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: 20px; margin-left: 13px;">
+    <div>
+      <video id="local-video-C" autoplay muted playsinline
+        style="width: 300px; height: 225px; border: 2px solid rgb(0, 255, 0);"></video>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 200px;">
+      <input id="qr-code-input" type="file" />
+      <button id="send-qr-code" style="margin-top: 10px;">QRコードを送信 (Connection C)</button>
+    </div>
+  </div>
+
   <script type="module" src="./main.mts"></script>
 </body>
 

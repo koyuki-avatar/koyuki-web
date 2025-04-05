@@ -2,11 +2,12 @@ import type { AyameAddStreamEvent, Connection } from "@open-ayame/ayame-web-sdk"
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // Environment variables
   const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
   const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
-  const roomName = import.meta.env.VITE_AYAME_ROOM_NAME;
   const signalingKey = import.meta.env.VITE_AYAME_SIGNALING_KEY;
 
+  let roomName = import.meta.env.VITE_AYAME_ROOM_NAME || "default-room";
   const clientId = crypto.randomUUID();
   const options = defaultOptions;
   options.signalingKey = signalingKey;
@@ -17,81 +18,76 @@ document.addEventListener("DOMContentLoaded", async () => {
   let connC: Connection | null = null;
   let dataChannelC: RTCDataChannel | null = null;
 
-  let videoResolution = { width: 640, height: 480 }; // Default resolution
-
-  // Add dropdown for selecting resolution
-  const resolutionSelector = document.createElement("select");
-  resolutionSelector.id = "resolution-selector";
-  resolutionSelector.innerHTML = `
-    <option value="640x480" selected>640x480</option>
-    <option value="360x240">360x240</option>
-    <option value="144x108">144x108</option>
-  `;
-  document.body.insertBefore(resolutionSelector, document.body.firstChild);
-
+  // Default video resolution
+  let videoResolution = { width: 640, height: 480 };
+  const resolutionSelector = document.querySelector("#resolution-selector");
   resolutionSelector.addEventListener("change", () => {
     const selected = resolutionSelector.value.split("x");
     videoResolution = { width: parseInt(selected[0], 10), height: parseInt(selected[1], 10) };
     console.log("Video resolution set to:", videoResolution);
   });
 
-  // Helper function to get media stream with the selected resolution
+  // Update room name
+  const roomNameInput = document.getElementById("room-name") as HTMLInputElement;
+  const roomIdPrefixLabel = document.getElementById("room-id-prefix") as HTMLLabelElement;
+  if (roomIdPrefixLabel) {
+    roomIdPrefixLabel.textContent = roomIdPrefix;
+  }
+  roomNameInput.value = roomName;
+
+  document.getElementById("update-id")?.addEventListener("click", () => {
+    roomName = roomNameInput.value;
+    console.log("Room name updated to:", roomName);
+  });
+
+  // Helper function to get media stream with video and audio
   const getMediaStream = async (): Promise<MediaStream> => {
     return await navigator.mediaDevices.getUserMedia({
       video: {
         width: videoResolution.width,
         height: videoResolution.height,
       },
+      audio: true, // Ensure audio is included
     });
   };
 
-  // Connection A (前方カメラ)
+  // Connection A (前方カメラ with audio and video in send-only mode)
   const connectA = async () => {
     try {
-      console.log("Connecting to Room A...");
+      console.log("Connecting to Room A in send-only mode...");
       const localMediaStreamA = await getMediaStream();
+
+      // Display local video and audio feed
       const localVideoA = document.getElementById("local-video-A") as HTMLVideoElement;
       if (localVideoA) {
-        localVideoA.srcObject = localMediaStreamA; // Display local camera feed
+        localVideoA.srcObject = localMediaStreamA;
         localVideoA.play();
       }
 
       connA = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-A`, options);
 
-      connA.on("addstream", (event: AyameAddStreamEvent) => {
-        const remoteVideoA = document.getElementById("remote-video-A") as HTMLVideoElement;
-        if (remoteVideoA) {
-          remoteVideoA.srcObject = event.stream;
-        }
-      });
-
-      connA.connect(localMediaStreamA);
+      connA.connect(localMediaStreamA); // Send local media stream (send-only)
     } catch (error) {
       console.error("Error in connectA:", error);
     }
   };
 
-  // Connection B (後方カメラ)
+  // Connection B (後方カメラ with audio and video in send-only mode)
   const connectB = async () => {
     try {
-      console.log("Connecting to Room B...");
+      console.log("Connecting to Room B in send-only mode...");
       const localMediaStreamB = await getMediaStream();
+
+      // Display local video and audio feed
       const localVideoB = document.getElementById("local-video-B") as HTMLVideoElement;
       if (localVideoB) {
-        localVideoB.srcObject = localMediaStreamB; // Display local camera feed
+        localVideoB.srcObject = localMediaStreamB;
         localVideoB.play();
       }
 
       connB = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-B`, options);
 
-      connB.on("addstream", (event: AyameAddStreamEvent) => {
-        const remoteVideoB = document.getElementById("remote-video-B") as HTMLVideoElement;
-        if (remoteVideoB) {
-          remoteVideoB.srcObject = event.stream;
-        }
-      });
-
-      connB.connect(localMediaStreamB);
+      connB.connect(localMediaStreamB); // Send local media stream (send-only)
     } catch (error) {
       console.error("Error in connectB:", error);
     }
@@ -151,68 +147,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   };
 
-  const handleSendQRCode = async () => {
-    try {
-      if (!dataChannelC) {
-        console.error("DataChannel C が存在しません。まだ初期化されていない可能性があります。");
-        return;
-      }
-
-      await waitForDataChannelOpen(dataChannelC);
-
-      const qrCodeFile = document.querySelector("#qr-code-input") as HTMLInputElement;
-      if (!qrCodeFile || !qrCodeFile.files?.length) {
-        console.error("QRコードファイルが選択されていません。");
-        return;
-      }
-
-      const file = qrCodeFile.files[0];
-      const arrayBuffer = await file.arrayBuffer();
-      dataChannelC.send(arrayBuffer);
-      console.log("QRコードファイルが送信されました。");
-    } catch (error) {
-      console.error("Error sending QR code:", error);
-    }
-  };
-
-  document.querySelector("#send-qr-code")?.addEventListener("click", handleSendQRCode);
-
   const connectC = async () => {
     try {
-      console.log("Connecting to Room C...");
+      console.log("Connecting to Room C as receive-only...");
       connC = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-C`, options);
-
-      connC.on("open", async () => {
-        console.log("Connection C opened.");
-        dataChannelC = await connC.createDataChannel("channelC", {});
-        if (dataChannelC) {
-          console.log("DataChannel C created.");
-          dataChannelC.onopen = () => console.log("DataChannel C open.");
-          dataChannelC.onmessage = handleDataChannelMessage;
+  
+      // Handle incoming messages from the data channel
+      connC.on("datachannel", (channel: RTCDataChannel) => {
+        console.log("DataChannel received:", channel.label);
+        channel.onopen = () => console.log("DataChannel opened:", channel.label);
+        channel.onmessage = (messageEvent: MessageEvent) => {
+          console.log("Received message:", messageEvent.data);
+          handleDataChannelMessage(messageEvent);
+        };
+        dataChannelC = channel; // Assign to global variable for reference
+      });
+  
+      // Handle remote streams (if any)
+      connC.on("addstream", (event: AyameAddStreamEvent) => {
+        const remoteVideo = document.getElementById("remote-video-C") as HTMLVideoElement;
+        if (remoteVideo) {
+          remoteVideo.srcObject = event.stream;
+          console.log("Received remote stream for Connection C.");
         }
       });
-
+  
       connC.on("error", (error) => {
         console.error("Connection C encountered an error:", error);
       });
-
+  
       connC.on("disconnect", () => {
         console.log("Connection C disconnected.");
         dataChannelC = null;
       });
-
-      connC.on("datachannel", (channel: RTCDataChannel) => {
-        console.log("DataChannel received:", channel.label);
-        channel.onopen = () => console.log("Received DataChannel opened:", channel.label);
-        channel.onmessage = handleDataChannelMessage;
-        dataChannelC = channel;
-      });
-
-      connC.connect();
+  
+      connC.connect(); // No local media stream provided, making it receive-only
     } catch (error) {
       console.error("Error in connectC:", error);
     }
   };
+  
 
   document.querySelector("#connect")?.addEventListener("click", async () => {
     await connectA();
