@@ -72,7 +72,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             dataChannelC = await connC.createDataChannel("channelC", {});
             if (dataChannelC) {
                 dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-                    console.log("Received message:", messageEvent.data);
                     handleDataChannelMessage(messageEvent);
                 };
             }
@@ -92,7 +91,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.log("DataChannel C opened:", dataChannelC);
             };
             dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-                console.log("Received message:", messageEvent.data);
                 handleDataChannelMessage(messageEvent);
             };
         });
@@ -107,5 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     document.querySelector("#disconnect")?.addEventListener("click", async () => {
         if (connC) await connC.disconnect();
+        connC = null;
+        (document.getElementById("remote-video-C") as HTMLVideoElement).srcObject = null;
     });
 });

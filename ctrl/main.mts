@@ -51,16 +51,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Helper function to get media stream with video and audio
     const getMediaStream = async (): Promise<MediaStream> => {
         return await navigator.mediaDevices.getUserMedia({
+            audio: true, // Ensure audio is included
             video: {
                 width: videoResolution.width,
                 height: videoResolution.height,
             },
-            audio: true, // Ensure audio is included
         });
     };
-
-    let maxspeedX = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
-    let maxspeedZ = parseFloat((document.getElementById("maxspeed-z") as HTMLInputElement).value);
 
     const handleDataChannelAReceived = (messageEvent: MessageEvent) => {
         console.log("Received control information:", messageEvent.data);
@@ -68,7 +65,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (receivedMessages) {
             receivedMessages.value += `Control: ${messageEvent.data}\n`;
         }
-
     }
 
     // Connection A (Front camera with control via DataChannel)
@@ -117,6 +113,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
     const joy = new window.JoyStick("joyDiv");
+
+    let maxspeedX = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
+    let maxspeedZ = parseFloat((document.getElementById("maxspeed-z") as HTMLInputElement).value);
 
     document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
         maxspeedX = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
@@ -236,7 +235,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const sendQRCode = async () => {
         if (!dataChannelC || dataChannelC.readyState !== "open") {
-            console.error("DataChannel C is not open.");
+            console.error("DataChannel C is not open.:", dataChannelC);
             return;
         }
 
@@ -267,6 +266,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (connA) await connA.disconnect();
         if (connB) await connB.disconnect();
         if (connC) await connC.disconnect();
+
+        connA = null;
+        connB = null;
+        connC = null;
+        (document.getElementById("remote-video-A") as HTMLVideoElement).srcObject = null;
+        (document.getElementById("remote-video-B") as HTMLVideoElement).srcObject = null;
         console.log("All connections disconnected.");
     });
 });
