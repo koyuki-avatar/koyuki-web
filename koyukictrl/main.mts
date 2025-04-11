@@ -8,9 +8,12 @@ import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
 
 // WebRTC
 document.addEventListener("DOMContentLoaded", () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlRoomId = urlParams.get("roomId");
+
   const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
   const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
-  let roomName = import.meta.env.VITE_AYAME_ROOM_NAME;
+  let roomName = urlRoomId || import.meta.env.VITE_AYAME_ROOM_NAME || "default-room";
   const signalingKey = import.meta.env.VITE_AYAME_SIGNALING_KEY;
 
   const clientId = crypto.randomUUID();
