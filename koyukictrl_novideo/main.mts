@@ -3,7 +3,6 @@ import type {
   Connection,
 } from "@open-ayame/ayame-web-sdk";
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
-import "../lib/joy.js";
 import { ControlSender } from "../lib/ControlSender.ts";
 
 // WebRTC
