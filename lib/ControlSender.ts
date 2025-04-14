@@ -1,5 +1,4 @@
 // src/ControlSender.ts
-import "./joy.js"; // joy.js を明示的に読み込む
 
 export class ControlSender {
   private dataChannel: RTCDataChannel;
