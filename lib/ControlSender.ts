@@ -41,6 +41,7 @@ export class ControlSender {
   }
 
   private lastsendjson = "";
+  private lastsendtime = 0;
   private sendCtrlBase(xin: number, zin: number) {
     if (!this.dataChannel) {
       console.log("sendCtrlBase: datachannel not found");
@@ -51,12 +52,18 @@ export class ControlSender {
     const xsend = Math.round(xtmp * this.maxspeedX * 100) / 100;
     const zsend = Math.round(zin * this.maxspeedZ * 100) / 100;
 
+    const now = Date.now();
+    if ((now - this.lastsendtime) > 300) {
+      this.lastsendjson = "";
+    }
+
     const sendjson = JSON.stringify({ x: xsend, z: zsend });
     if (sendjson !== this.lastsendjson) {
       // 念のため，2回送る
       this.dataChannel.send(sendjson);
       setTimeout(() => this.dataChannel.send(sendjson), 10);
       this.lastsendjson = sendjson;
+      this.lastsendtime = now;
       console.log("sendCtrlBase: sent:", sendjson);
     }
   }
