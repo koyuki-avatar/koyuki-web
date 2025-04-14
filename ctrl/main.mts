@@ -1,5 +1,7 @@
 import type { AyameAddStreamEvent, Connection } from "@open-ayame/ayame-web-sdk";
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
+import "../lib/joy.js";
+import { ControlSender } from "../lib/ControlSender.ts";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -88,6 +90,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (dataChannelA) {
         console.log("DataChannel A created:", dataChannelA);
+          sender.setDataChannel(dataChannelA);
+          sender.start(50);
 
         // Handle incoming messages
         dataChannelA.onmessage = (messageEvent: MessageEvent) => {
@@ -100,6 +104,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       dataChannelA = dc;
       dataChannelA.onopen = () => {
         console.log("DataChannel A opened:", dataChannelA);
+        sender.setDataChannel(dataChannelA);
+        sender.start(50);
       };
       dataChannelA.onmessage = (messageEvent: MessageEvent) => {
         handleDataChannelAReceived();
@@ -109,78 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     connA.connect(null);
   };
 
-  // Joystick setup
-  declare global {
-    interface Window {
-      JoyStick: any;
-    }
-  }
-  const joy = new window.JoyStick("joyDiv");
-
-  let maxspeedX = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
-  let maxspeedZ = parseFloat((document.getElementById("maxspeed-z") as HTMLInputElement).value);
-
-  document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
-    maxspeedX = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
-    maxspeedZ = parseFloat((document.getElementById("maxspeed-z") as HTMLInputElement).value);
-    console.log("Max speeds updated:", { maxspeedX, maxspeedZ });
-  });
-
-  function sendCtrlBase(xin: number, zin: number) {
-    if (!dataChannelA || dataChannelA.readyState !== 'open') {
-      console.error("DataChannel A is not available.");
-      return;
-    }
-
-    const xsend = Math.round((xin / 3.6) * maxspeedX * 100) / 100; // Convert km/h to m/s
-    const zsend = Math.round(zin * maxspeedZ * 100) / 100;
-    const controlMessage = JSON.stringify({ x: xsend, z: zsend });
-
-    dataChannelA.send(controlMessage);
-    console.log("Sent control message:", controlMessage);
-  }
-
-  function sendCtrlJoy() {
-    sendCtrlBase(joy.GetY() / 100, -joy.GetX() / 100);
-  }
-
-  // Gamepad setup
-  let isGamepadActive = false;
-  const gamepadCheckbox = document.querySelector("#use-gamepad") as HTMLInputElement;
-
-  gamepadCheckbox.addEventListener("change", () => {
-    isGamepadActive = gamepadCheckbox.checked;
-    if (!isGamepadActive) {
-      (document.getElementById("status-gamepad") as HTMLElement).innerText = "Disabled";
-    }
-  });
-
-  function sendCtrlGamepad() {
-    const deadzone = 0.15;
-    const gamepads = navigator.getGamepads();
-    const gp = gamepads[0];
-    if (gp) {
-      const x = Math.abs(gp.axes[0]) < deadzone ? 0 : gp.axes[0];
-      const y = Math.abs(gp.axes[1]) < deadzone ? 0 : gp.axes[1];
-      const killButton = gp.buttons[4].pressed || gp.buttons[5].pressed;
-
-      if (killButton) sendCtrlBase(0, 0);
-      else sendCtrlBase(-y, -x);
-
-      (document.getElementById("status-gamepad") as HTMLElement).innerText = `Connected: ${gp.id}`;
-    } else {
-      (document.getElementById("status-gamepad") as HTMLElement).innerText = "Disconnected; Press Any Button!";
-    }
-  }
-
-  // Send control messages at intervals
-  setInterval(() => {
-    if (isGamepadActive) {
-      sendCtrlGamepad();
-    } else {
-      sendCtrlJoy();
-    }
-  }, 50);
+  const sender = new ControlSender();
 
   // Connection B (後方カメラ)
   const connectB = async () => {

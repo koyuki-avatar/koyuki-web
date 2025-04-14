@@ -14,6 +14,10 @@
     "baseUrl": ".",
     "newLine": "LF",
     "types": ["node", "webrtc"],
+    "typeRoots" : [
+      "./node_modules/@types",
+      "./lib/types"
+    ],
     "lib": ["dom", "esnext"],
     "declarationDir": "./dist",
     "outDir": "./dist",
