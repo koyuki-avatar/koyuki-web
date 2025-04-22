@@ -19,6 +19,7 @@
       <button id="update-id">Update ID</button> 
       <button id="connect">Connect</button>
       <button id="disconnect">Disconnect</button>
+      <button id="toggle-fullscreen">全画面表示</button>
     </p>
   </div>
   <div style="float:left; margin-left: 20px;">
@@ -32,6 +33,22 @@
       <!-- Space to dynamically add received QR code images -->
     </div>
   </div>
+  <script>
+  const video = document.getElementById('remote-video-C');
+  const button = document.getElementById('toggle-fullscreen');
+
+  button.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      video.requestFullscreen().catch(err => {
+        console.error(`全画面モードの要求に失敗しました: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen().catch(err => {
+        console.error(`全画面モードの解除に失敗しました: ${err.message}`);
+      });
+    }
+  });
+  </script>
   <script type="module" src="./main.mts"></script>
 </body>
 
