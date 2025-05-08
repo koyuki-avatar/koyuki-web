@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <title>Koyuki Control</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #fafafa;
+    }
+
+    header {
+      background: #333;
+      color: white;
+      padding: 10px;
+      top: 0;
+    }
+
+    .control-panel {
+      padding: 10px 20px;
+      background: #f0f0f0;
+    }
+
+    .control-panel p {
+      margin: 10px 0;
+    }
+
+    .fpv-section {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    #remote-video-A {
+      width: 960px;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      border: 3px solid blue;
+    }
+
+    .right-side-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 17px;
+    }
+
+    #remote-video-B {
+      width: 320px;
+      height: 240px;
+      border: 3px solid red;
+    }
+
+    #joyDiv {
+      width: 200px;
+      height: 200px;
+      border: 1px solid #ff0000;
+    }
+
+    #local-video-C {
+      width: 320px;
+      height: 240px;
+      border: 2px solid green;
+    }
+
+    .qr-section {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      border-top: 1px solid #ccc;
+    }
+
+    .qr-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h3>Koyuki Control (操縦側)</h3>
+  </header>
+
+  <div class="control-panel">
+    <span id="connection-state" data-connection-state="undefined"></span>
+    <p>
+      Room ID:
+      <label id="room-id-prefix" disabled></label>
+      <input id="room-name" type="text" style="width: 200px;">
+      <button id="update-id">Update ID</button>
+      <select id="resolution-selector">
+        <option value="640x480" selected>640x480</option>
+        <option value="360x240">360x240</option>
+        <option value="144x108">144x108</option>
+      </select>
+      <button id="connect">Connect</button>
+      <button id="disconnect">Disconnect</button>
+    </p>
+
+    <p>
+      Max Speed (x[km/h], z[rad/s]) = (
+      <input id="maxspeed-x" type="number" value="3.0" style="width: 100px;">,
+      <input id="maxspeed-z" type="number" value="1.0" style="width: 100px;">)
+      <button id="set-maxspeed">Set</button>
+    </p>
+
+    <p>
+      Use Gamepad <input type="checkbox" id="use-gamepad">
+      Status: <span id="status-gamepad">Disabled</span>
+    </p>
+
+    <p>
+      Signaling Client ID:
+      <input id="client-id-input" type="text" style="width: 300px;">
+    </p>
+
+    <p>
+      <!-- ★ LiDAR と Power ボタンを追加 ★ -->
+      <button id="lidarToggleButton" >Toggle LiDAR (ON)</button>
+      <button id="powerToggleButton" disabled>Toggle Power (ON)</button>
+      <button id="arm" disabled>Toggle arm</button>
+      <!-- ★ VBat 表示要素 ★ -->
+      <span>Voltage: <span id="vbat_display">N/A</span></span>
+
+    </p>
+  </div>
+  
+ <div class="fpv-section">
+    <video id="remote-video-A" autoplay playsinline></video>
+
+    <div class="right-side-panel">
+      <video id="remote-video-B" autoplay muted playsinline></video>
+      <video id="local-video-C" autoplay muted playsinline></video>
+      <div id="joyDiv"></div>
+    </div>
+  </div>
+
+  <div class="qr-section">
+    <div class="qr-panel">
+      <input id="qr-code-input" type="file">
+      <button id="send-qr-code">QRコードを送信 (Connection C)</button>
+    </div>
+  </div>
+
+  <script src="/lib/joy.js"></script>
+  <script type="module" src="./main.mts"></script>
+  <script type="module" src="../lib/ControlSender.ts"></script>
+</body>
+
+</html>

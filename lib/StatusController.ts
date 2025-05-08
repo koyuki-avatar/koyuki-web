@@ -10,7 +10,7 @@ export class StatusController {
     // 状態変数 (初期値 ON)
     private isLidarOn = true;
     private isPowerOn = true;
-
+    private armOn = false;
     // タイマーID (start/stop のインターフェースのため用意)
     private intervalId: number | null = null;
 
@@ -19,6 +19,7 @@ export class StatusController {
         this.vbatDisplayElement = document.getElementById("vbat_display") as HTMLSpanElement;
         this.lidarToggleButton = document.getElementById("lidarToggleButton") as HTMLButtonElement;
         this.powerToggleButton = document.getElementById("powerToggleButton") as HTMLButtonElement;
+        this.armToggleButton = document.getElementById("arm") as HTMLButtonElement;
         this.receivedMessagesTextarea = document.getElementById("received-messages") as HTMLTextAreaElement;
 
         // 初期ボタン表示と状態を設定
@@ -28,7 +29,7 @@ export class StatusController {
         // ボタンにイベントリスナーを設定
         this.lidarToggleButton?.addEventListener('click', () => this.toggleLidar());
         this.powerToggleButton?.addEventListener('click', () => this.togglePower());
-
+        this.armToggleButton?.addEventListener('click', () => this.togglearm());
         console.log("StatusControler initialized.");
     }
 
@@ -153,6 +154,12 @@ export class StatusController {
         this.updateButtonStates();
     }
 
+    private togglearm() {
+        
+      const command = 'a1';
+      this.sendCommand(command);
+      //this.updateButtonStates();
+  }
     // コマンド送信 (private)
     private sendCommand(command: string) {
         if (this.dataChannel == null || this.dataChannel.readyState !== "open") {
@@ -170,6 +177,7 @@ export class StatusController {
     public setButtonsDisabled(disabled: boolean) {
         if (this.lidarToggleButton) this.lidarToggleButton.disabled = disabled;
         if (this.powerToggleButton) this.powerToggleButton.disabled = disabled;
+        if (this.armToggleButton) this.armToggleButton.disabled = disabled;
         if (disabled) {
             this.updateButtonStates(); // 無効化時はテキストも現在の状態に更新
         }
