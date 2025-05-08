@@ -17,6 +17,7 @@ export default defineConfig({
         koyukictrl: resolve(__dirname, "koyukictrl/index.html"),
         koyukictrl_novideo: resolve(__dirname, "koyukictrl_novideo/index.html"),
         ctrl: resolve(__dirname, "ctrl/index.html"),
+        ctrl_advance: resolve(__dirname, "ctrl_advance/index.html"),
         robot: resolve(__dirname, "robot/index.html"),
       },
     },
