@@ -1,63 +1,40 @@
-import type {
-  AyameAddStreamEvent,
-  Connection,
-} from "@open-ayame/ayame-web-sdk";
+import type { AyameAddStreamEvent, Connection } from "@open-ayame/ayame-web-sdk";
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
 import { ControlSender } from "../lib/ControlSender.ts";
 import {StatusController} from "../lib/StatusController.ts";
 
-// WebRTC
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const urlRoomId = urlParams.get("roomId");
 
+  // Environment variables
   const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
   const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
-  let roomName = urlRoomId || import.meta.env.VITE_AYAME_ROOM_NAME || "default-room";
   const signalingKey = import.meta.env.VITE_AYAME_SIGNALING_KEY;
-  
+
+  let roomName = urlRoomId || import.meta.env.VITE_AYAME_ROOM_NAME || "default-room";
   const clientId = crypto.randomUUID();
+  const options = defaultOptions;
+  options.signalingKey = signalingKey;
+  options.clientId = clientId;
 
-
-  
   const sender_status = new StatusController();
 
-  const roomIdPrefixElement = document.querySelector(
-    "#room-id-prefix",
-  ) as HTMLLabelElement;
-  if (roomIdPrefixElement) {
-    roomIdPrefixElement.textContent = roomIdPrefix;
+  let connA: Connection | null = null;
+  let connB: Connection | null = null;
+  let connC: Connection | null = null;
+  let dataChannelA: RTCDataChannel | null = null;
+  let dataChannelC: RTCDataChannel | null = null;
+
+  // Display Client ID in the UI
+  const clientIdInput = document.querySelector("#client-id-input") as HTMLInputElement;
+  if (clientIdInput) {
+    clientIdInput.value = clientId; // Ensure the Client ID is visible in the input field
+    console.log("Client ID set to:", clientId);
   }
 
-  let roomNameInputElement = document.querySelector(
-    "#room-name",
-  ) as HTMLInputElement;
-  if (roomNameInputElement) {
-    roomNameInputElement.value = roomName;
-  }
-
-  const clientIdInputElement = document.querySelector(
-    "#client-id-input",
-  ) as HTMLInputElement;
-  if (clientIdInputElement) {
-    clientIdInputElement.value = clientId;
-  }
-
-  document.querySelector("#update-id")?.addEventListener("click", () => {
-    roomName = document.getElementById("room-name").value;
-    console.log(roomNameInputElement.value);
-    roomNameInputElement = document.querySelector(
-      "#room-name",
-    ) as HTMLInputElement;
-    if (roomNameInputElement) {
-      roomNameInputElement.value = roomName;
-    }
-  });
-
-  // video resolution
   // Default video resolution
   let videoResolution = { width: 640, height: 480 };
-
   const resolutionSelector = document.querySelector("#resolution-selector");
   resolutionSelector.addEventListener("change", () => {
     const [width, height] = resolutionSelector.value.split("x").map(Number);
@@ -65,10 +42,23 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Video resolution set to:", videoResolution);
   });
 
-  // Helper function for setting up WebRTC connections
+  // Update room name
+  const roomNameInput = document.getElementById("room-name") as HTMLInputElement;
+  const roomIdPrefixLabel = document.getElementById("room-id-prefix") as HTMLLabelElement;
+  if (roomIdPrefixLabel) {
+    roomIdPrefixLabel.textContent = roomIdPrefix;
+  }
+  roomNameInput.value = roomName;
+
+  document.getElementById("update-id")?.addEventListener("click", () => {
+    roomName = roomNameInput.value;
+    console.log("Room name updated to:", roomName);
+  });
+
+  // Helper function to get media stream with video and audio
   const getMediaStream = async (): Promise<MediaStream> => {
     return await navigator.mediaDevices.getUserMedia({
-      audio: true,
+      audio: true, // Ensure audio is included
       video: {
         width: videoResolution.width,
         height: videoResolution.height,
@@ -76,160 +66,172 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  const debug = true;
+  const handleDataChannelAReceived = (messageEvent: MessageEvent) => {
+    console.log("Received control information:", messageEvent.data);
+    const receivedMessages = document.getElementById("received-messages") as HTMLTextAreaElement;
+    if (receivedMessages) {
+      receivedMessages.value += `Control: ${messageEvent.data}\n`;
+    } 
+  }
 
-  const options = defaultOptions;
-  options.clientId = clientId;
-  options.signalingKey = signalingKey;
+  // Connection A (Front camera with control via DataChannel)
+  const connectA = async () => {
+    connA = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-A`, options);
 
-  let localMediaStream: MediaStream | null = null;
-  let conn: Connection | null = null;
-  // DataChannel
-  const label = "message";
-  let dataChannel: RTCDataChannel | null = null;
-
-  document.querySelector("#connect")?.addEventListener("click", async () => {
-    localMediaStream = await getMediaStream();
-    const localVideoElement = document.getElementById(
-      "local-video",
-    ) as HTMLVideoElement;
-    if (localVideoElement) {
-      localVideoElement.srcObject = localMediaStream;
-    }
-  
-    const roomId = `${roomIdPrefix}${roomName}`;
-    conn = createConnection(signalingUrl, roomId, options, debug);
-
-    conn.on("addstream", (event: AyameAddStreamEvent) => {
-      const remoteVideoElement = document.getElementById(
-        "remote-video",
-      ) as HTMLVideoElement;
-      if (remoteVideoElement) {
-        remoteVideoElement.srcObject = event.stream;
+    connA.on("addstream", (event: AyameAddStreamEvent) => {
+      const remoteVideo = document.getElementById("remote-video-A") as HTMLVideoElement;
+      if (remoteVideo) {
+      remoteVideo.srcObject = event.stream;
       }
     });
 
-    // WebRTC が確立したら connection-state に pc.connectionState 反映する
-    conn.on("open", (event: Event) => {
-      if (!conn) {
-        return;
-      }
-      const pc = conn.peerConnection;
-      if (pc) {
-        pc.onconnectionstatechange = (event: Event) => {
-          const connectionStateElement = document.getElementById(
-            "connection-state",
-          ) as HTMLSpanElement;
-          if (connectionStateElement) {
-            // data- に connectionState を追加する
-            connectionStateElement.dataset.connectionState = pc.connectionState;
-          }
-        };
-      }
-    });
-    conn.on("open", async (e: unknown) => {
-      if (!conn) {
-        return;
-      }
-      dataChannel = await conn.createDataChannel(label, {});
-      if (dataChannel) {
-        console.log(
-          "------------- dataChannel created ----------------",
-          dataChannel,
-        );
-        dataChannel.onopen = () => {
-          console.log("------------- dataChannel onopen ----------------");
-          sender.setDataChannel(dataChannel);
+    // DataChannel setup
+    connA.on("open", async () => {
+      console.log("Connection A opened.");
+      dataChannelA = await connA.createDataChannel("controlA", {});
+
+      if (dataChannelA) {
+        console.log("DataChannel A created:", dataChannelA);
+          sender.setDataChannel(dataChannelA);
           sender.start(50);
-
-          //add before
-          sender_status.setDataChannel(dataChannel);
+          sender_status.setDataChannel(dataChannelA);
           sender_status.start(50);
           sender_status.onDataChannelOpen();
-        };
-        dataChannel.onmessage = (messageEvent: MessageEvent) => {
-          console.log(
-            "------------- dataChannel onmessage ----------------",
-            messageEvent,
-          );
-          //add before
-          sender_status.handleMessage(messageEvent.data);
-
-          const receivedMessages = document.querySelector(
-            "#received-messages",
-          ) as HTMLTextAreaElement;
-          if (receivedMessages) {
-            receivedMessages.value += `${messageEvent.data}\n`;
-          }
+        // Handle incoming messages
+        dataChannelA.onmessage = (messageEvent: MessageEvent) => {
+          handleDataChannelAReceived();
         };
       }
     });
 
-    conn.on("datachannel", (dc: RTCDataChannel) => {
-      console.log("------------- dataChannel created ----------------", dc);
-      dataChannel = dc;
-      dataChannel.onopen = () => {
-        console.log("------------- dataChannel onopen ----------------");
-        sender.setDataChannel(dataChannel);
+    connA.on("datachannel", (dc: RTCDataChannel) => {
+      dataChannelA = dc;
+      dataChannelA.onopen = () => {
+        console.log("DataChannel A opened:", dataChannelA);
+        sender.setDataChannel(dataChannelA);
         sender.start(50);
-
-        //add before
         sender_status.setDataChannel(dataChannel);
         sender_status.start(50);
         sender_status.onDataChannelOpen();
-      };
-      dataChannel.onmessage = (messageEvent: MessageEvent) => {
-        //add before
+    };
+      dataChannelA.onmessage = (messageEvent: MessageEvent) => {
+        handleDataChannelAReceived();
         sender_status.handleMessage(messageEvent.data);
-        const receivedMessages = document.querySelector(
-          "#received-messages",
-        ) as HTMLTextAreaElement;
-        if (receivedMessages) {
-          receivedMessages.value += `${messageEvent.data}\n`;
-        }
       };
     });
 
-    conn.on("disconnect", (event: Event) => {
-      if (!conn) {
-        return;
-      }
-      conn = null;
+    connA.connect(null);
+  };
 
-      //add before
-      sender_status.resetStatus();
+  const sender = new ControlSender();
 
-      for (const track of localMediaStream?.getTracks() ?? []) {
-        track.stop();
-      }
-      localMediaStream = null;
+  // Connection B (後方カメラ)
+  const connectB = async () => {
+    connB = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-B`, options);
 
-      const localVideoElement = document.getElementById(
-        "local-video",
-      ) as HTMLVideoElement;
-      if (localVideoElement) {
-        localVideoElement.srcObject = null;
-      }
-      const remoteVideoElement = document.getElementById(
-        "remote-video",
-      ) as HTMLVideoElement;
-      if (remoteVideoElement) {
-        remoteVideoElement.srcObject = null;
+    connB.on("addstream", (event: AyameAddStreamEvent) => {
+      const remoteVideo = document.getElementById("remote-video-B") as HTMLVideoElement;
+      if (remoteVideo) {
+        remoteVideo.srcObject = event.stream;
       }
     });
 
-    conn.connect(localMediaStream);
-  });
+    connB.connect(null);
+  };
 
+  // Connection C (映像送信＋データチャンネル)
+  const connectC = async () => {
+    connC = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-C`, options);
 
-  document.querySelector("#disconnect")?.addEventListener("click", async () => {
-    if (!conn) {
+    const localMediaStream = await getMediaStream();
+
+    const localVideo = document.getElementById("local-video-C") as HTMLVideoElement;
+    if (localVideo) {
+      localVideo.srcObject = localMediaStream;
+      localVideo.play();
+    }
+
+    connC.on("open", async () => {
+      console.log("Connection C opened.");
+
+      dataChannelC = await connC.createDataChannel("channelC", {});
+      if (dataChannelC) {
+        console.log("DataChannel C created:", dataChannelA);
+        dataChannelC.onmessage = (messageEvent: MessageEvent) => {
+        };
+      }
+    });
+
+    connC.on("datachannel", (dc: RTCDataChannel) => {
+      dataChannelC = dc;
+      dataChannelC.onopen = () => {
+        console.log("DataChannel C opened:", dataChannelC);
+      };
+      dataChannelC.onmessage = (messageEvent: MessageEvent) => {
+        // do nothing
+      };
+    });
+
+    connC.connect(localMediaStream);
+  };
+
+  const CHUNK_SIZE = 16384; // 16KB
+
+  const sendQRCode = async () => {
+    if (!dataChannelC || dataChannelC.readyState !== "open") {
+      console.error("DataChannel C is not open:", dataChannelC);
       return;
     }
-    //add before
-    console.log("disconnect");
-    //sender_status.stop();
-    await conn.disconnect();
+
+    const qrInput = document.getElementById("qr-code-input") as HTMLInputElement;
+    if (!qrInput.files?.length) {
+      console.error("QRコードファイルが選択されていません。");
+      return;
+    }
+
+    const file = qrInput.files[0];
+    const fileSize = file.size;
+    console.log("送信するファイル:", file.name, "サイズ：", fileSize);
+
+    const header = JSON.stringify({ type: "fileHeader", fileName: file.name, fileSize });
+    dataChannelC.send(header);
+
+    let offset = 0;
+    while (offset < fileSize) {
+      const slice = file.slice(offset, offset + CHUNK_SIZE);
+      const arrayBuffer = await slice.arrayBuffer();
+      dataChannelC.send(arrayBuffer);
+      console.log("チャンク送信: オフセット", offset, "～", offset + arrayBuffer.byteLength);
+      offset += CHUNK_SIZE;
+    }
+
+    const doneMsg = JSON.stringify({ type: "fileDone" });
+    dataChannelC.send(doneMsg);
+    console.log("ファイルの送信が完了しました。");
+  };
+
+
+  document.getElementById("send-qr-code")?.addEventListener("click", sendQRCode);
+
+  // Connect button
+  document.getElementById("connect")?.addEventListener("click", async () => {
+    await connectA();
+    await connectB();
+    await connectC();
+    console.log("All connections established.");
   });
-  const sender = new ControlSender();
+
+  // Disconnect button
+  document.getElementById("disconnect")?.addEventListener("click", async () => {
+    if (connA) await connA.disconnect();
+    if (connB) await connB.disconnect();
+    if (connC) await connC.disconnect();
+
+    connA = null;
+    connB = null;
+    connC = null;
+    (document.getElementById("remote-video-A") as HTMLVideoElement).srcObject = null;
+    (document.getElementById("remote-video-B") as HTMLVideoElement).srcObject = null;
+    console.log("All connections disconnected.");
+  });
 });
