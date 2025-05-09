@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Handle incoming messages
         dataChannelA.onmessage = (messageEvent: MessageEvent) => {
           handleDataChannelAReceived();
+          sender_status.handleMessage(messageEvent.data);
         };
       }
     });
