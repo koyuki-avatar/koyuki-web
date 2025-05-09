@@ -99,8 +99,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           sender_status.onDataChannelOpen();
         // Handle incoming messages
         dataChannelA.onmessage = (messageEvent: MessageEvent) => {
-          handleDataChannelAReceived();
-          sender_status.handleMessage(messageEvent.data);
+          try{
+            handleDataChannelAReceived(messageEvent);
+          }catch(e){
+            console.error("Error in handleDataChannelAReceived (create channel):", e);
+          }
+
+          try{
+            sender_status.handleMessage(messageEvent.data);
+          }catch(e){
+            console.error("Error in sender_status.handleMessage (create channel):", e);
+          } 
         };
       }
     });
@@ -116,8 +125,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         sender_status.onDataChannelOpen();
     };
       dataChannelA.onmessage = (messageEvent: MessageEvent) => {
-        handleDataChannelAReceived();
-        sender_status.handleMessage(messageEvent.data);
+        try{
+          handleDataChannelAReceived(messageEvent);
+        }catch(e){
+          console.error("Error in handleDataChannelAReceived (remote channel):", e);
+        }
+        try{
+          sender_status.handleMessage(messageEvent.data);
+        }catch(e){
+          console.error("Error in sender_status.handleMessage (remote channel):", e);
+        }
       };
     });
 
