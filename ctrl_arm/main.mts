@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("DataChannel A opened:", dataChannelA);
         sender.setDataChannel(dataChannelA);
         sender.start(50);
-        sender_status.setDataChannel(dataChannel);
+        sender_status.setDataChannel(dataChannelA);
         sender_status.start(50);
         sender_status.onDataChannelOpen();
     };
