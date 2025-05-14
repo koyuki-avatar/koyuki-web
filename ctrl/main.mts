@@ -145,6 +145,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     connC.on("open", async () => {
       console.log("Connection C opened.");
 
+      const videoSender = connC.pc.getSenders().find(sender => sender.track && sender.track.kind === "video");
+      if (videoSender) {
+        const params = videoSender.getParameters();
+        if (!params.encodings || params.encodings.length === 0) {
+          // encodings が空の場合は最低1つのエンコーディングを作成
+          params.encodings = [{}];
+        }
+        // maxBitrate を 800kbps (800,000bps) に制限する
+        params.encodings[0].maxBitrate = 800000;
+        try {
+          await videoSender.setParameters(params);
+          console.log("RTCRtpSender parameters updated to 800kbps.");
+        } catch (e) {
+          console.error("Failed to update video sender parameters:", e);
+        }
+      } else {
+        console.warn("No video sender found.");
+      }
+
       dataChannelC = await connC.createDataChannel("channelC", {});
       if (dataChannelC) {
         console.log("DataChannel C created:", dataChannelA);
@@ -199,6 +218,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const doneMsg = JSON.stringify({ type: "fileDone" });
     dataChannelC.send(doneMsg);
     console.log("ファイルの送信が完了しました。");
+    const sendViewMode = async (mode: "SHOW_VIDEO" | "SHOW_QR" | "SHOW_BOTH") => {
+      console.log(`送信リクエスト: ${mode}, DataChannel 状態: ${dataChannelC.readyState}`);
+    
+      if (!dataChannelC || dataChannelC.readyState !== "open") {
+        console.error("DataChannelC が未接続、または送信不可");
+        return;
+      }
+    
+      dataChannelC.send(mode);
+      console.log(`送信完了: ${mode}`);
+    };
+
+    document.getElementById("show-both")?.addEventListener("click", () => sendViewMode("SHOW_BOTH"));
+    document.getElementById("show-video")?.addEventListener("click", () => sendViewMode("SHOW_VIDEO"));
+    document.getElementById("show-qr")?.addEventListener("click", () => sendViewMode("SHOW_QR"));
   };
 
 

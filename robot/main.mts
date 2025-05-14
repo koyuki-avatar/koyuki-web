@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let fileMetadata: { fileName: string; fileSize: number } | null = null;
   let receivedFileChunks: ArrayBuffer[] = [];
+  let mode: string | null = null;
 
   // Update room name
   const roomNameInput = document.getElementById("room-name") as HTMLInputElement;
@@ -36,12 +37,63 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Room name updated to:", roomName);
   });
 
+  const handleViewMode = (mode: "SHOW_VIDEO" | "SHOW_QR" | "SHOW_BOTH") => {
+    console.log(`画面モード変更: ${mode}`);
+    const videoContainer = document.getElementById("remote-video-C") as HTMLVideoElement;
+    const qrContainer = document.getElementById("received-images") as HTMLDivElement;
+  
+
+    if (mode === "SHOW_VIDEO") {
+      videoContainer.style.display = "block";
+      
+      // ウィンドウ幅に合わせる
+      videoContainer.style.width = `${window.innerWidth}px`;  
+      videoContainer.style.height = `${window.innerHeight}px`;  
+
+      // アスペクト比を維持
+      videoContainer.style.objectFit = "contain"; 
+
+      qrContainer.style.display = "none";
+      console.log("切り替え: 映像モード (ウィンドウ幅に適応)");
+    } else if (mode === "SHOW_QR") {
+      videoContainer.style.display = "none";
+  
+      if (qrContainer.children.length > 0) {
+        qrContainer.style.display = "block";
+        qrContainer.style.width = "100vw";
+        qrContainer.style.height = "100vh";
+        console.log("切り替え: QRコードモード (フルスクリーン)");
+      } else {
+        console.warn("QRコードがまだ受信されていません。");
+      }
+    } else if (mode === "SHOW_BOTH") {
+      videoContainer.style.display = "block";
+      videoContainer.style.width = "600px"; 
+      videoContainer.style.height = "450px"; 
+  
+      if (qrContainer.children.length > 0) {
+        qrContainer.style.display = "block";
+        qrContainer.style.width = "230px";
+        qrContainer.style.height = "auto";
+        console.log("切り替え: 映像 + QRコードモード");
+      }
+    }
+  };
+  
   const handleDataChannelMessage = (messageEvent: MessageEvent) => {
     let data: any;
+    console.log("-----mode------:", mode)
   
     if (typeof messageEvent.data === "string") {
       try {
-        data = JSON.parse(messageEvent.data);
+        if (messageEvent.data === "SHOW_VIDEO" || messageEvent.data === "SHOW_QR" || messageEvent.data ==="SHOW_BOTH") {
+          data = messageEvent.data;
+          mode = data
+          handleViewMode(mode);
+          console.log("mode:",mode)
+        } else {
+          data = JSON.parse(messageEvent.data);
+        }
       } catch (e) {
         console.error("JSON のパースに失敗:", e);
         return;
@@ -72,52 +124,85 @@ document.addEventListener("DOMContentLoaded", async () => {
         receivedImages.id = "received-images";
         document.body.appendChild(receivedImages);
       }
+
+      // 既存のQRコード画像を削除（上書きするため）
+      while (receivedImages.firstChild) {
+        receivedImages.removeChild(receivedImages.firstChild);
+      }
+
       const img = document.createElement("img");
       img.src = url;
-      img.style.maxWidth = "300px";
       img.alt = fileMetadata?.fileName || "Received Image";
+
+      console.log("mode2:",mode)
+      if (mode === "SHOW_QR") {
+        img.style.width = "100%";  
+        img.style.height = "100%"; 
+        img.style.objectFit = "contain"; 
+        console.log("QRコードのみ表示: フルスクリーン化");
+      } else {
+        img.style.maxWidth = "300px";
+        console.log("QRコード表示: 通常サイズ (max-width: 300px)");
+      }
+
       receivedImages.appendChild(img);
+      receivedImages.style.display = "block";
       console.log("画像が正常に表示されました。");
   
       fileMetadata = null;
       receivedFileChunks = [];
     }
   };
-  
 
   // Connection C
-  const connectC = async () => {
+  const connectC = async () => { 
     connC = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-C`, options);
-    connC.on("open", async () => {
-      console.log("Connection C opened.");
-
-      dataChannelC = await connC.createDataChannel("channelC", {});
+    connC.on("open", async () => { 
+      console.log("Connection C opened."); 
+      dataChannelC = await connC.createDataChannel("channelC", {}); 
       if (dataChannelC) {
-        dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-          handleDataChannelMessage(messageEvent);
+        console.log("DataChannel C opened:", dataChannelC);  
+        dataChannelC.onmessage = (messageEvent: MessageEvent) => { 
+          handleDataChannelMessage(messageEvent); 
+          console.log(`受信メッセージ: ${messageEvent.data}, DataChannel 状態: ${dataChannelC.readyState}`); 
+          const message = messageEvent.data; 
+          const videoContainer = document.getElementById("remote-video-C") as HTMLVideoElement; 
+          const qrContainer = document.getElementById("received-images") as HTMLDivElement; 
+          if (message === "SHOW_VIDEO") { 
+            console.log("SHOW_VIDEO 受信！"); 
+            videoContainer.style.display = "block";
+            qrContainer.style.display = "none";
+            console.log("切り替え: 映像モード"); 
+          } else if (message === "SHOW_QR") { 
+            console.log("SHOW_QR 受信！"); 
+            videoContainer.style.display = "none"; 
+            if (qrContainer.children.length > 0) { 
+              qrContainer.style.display = "block"; 
+            } else { 
+              console.warn("QRコードがまだ受信されていません。"); 
+            } 
+            console.log("切り替え: QRコードモード"); 
+          } else if (message === "SHOW_BOTH") {
+            videoContainer.style.display = "block";
+            
+            if (qrContainer.children.length > 0) {
+              qrContainer.style.display = "block";
+              console.log("切り替え: 映像 + QRコードモード");
+            } else {
+              console.warn("QRコードがまだ受信されていませんが、映像は表示します。");
+            }
+          }
+        
         };
-      }
-    });
-
-    // Handle remote streams (if any)
-    connC.on("addstream", (event: AyameAddStreamEvent) => {
-      const remoteVideo = document.getElementById("remote-video-C") as HTMLVideoElement;
-      if (remoteVideo) {
-        remoteVideo.srcObject = event.stream;
-      }
-    });
-
-    connC.on("datachannel", (dc: RTCDataChannel) => {
-      dataChannelC = dc;
-      dataChannelC.onopen = () => {
-        console.log("DataChannel C opened:", dataChannelC);
-      };
-      dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-        handleDataChannelMessage(messageEvent);
-      };
-    });
-
-    connC.connect(); // No local media stream provided, making it receive-only
+      } 
+    }); 
+    // Handle remote streams (if any) 
+    connC.on("addstream", (event: AyameAddStreamEvent) => { 
+      const remoteVideo = document.getElementById("remote-video-C") as HTMLVideoElement; 
+      if (remoteVideo) { remoteVideo.srcObject = event.stream; } 
+    }); 
+      
+    connC.connect(); // No local media stream provided, making it receive-only 
   };
 
   document.querySelector("#connect")?.addEventListener("click", async () => {

@@ -126,6 +126,27 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!conn) {
         return;
       }
+
+      const videoSender = conn.pc.getSenders().find(sender => sender.track && sender.track.kind === "video");
+      if (videoSender) {
+        const params = videoSender.getParameters();
+        if (!params.encodings || params.encodings.length === 0) {
+          // encodings が空の場合は最低1つのエンコーディングを作成
+          params.encodings = [{}];
+        }
+        // maxBitrate を 800kbps (800,000bps) に制限する
+        params.encodings[0].maxBitrate = 800000;
+        try {
+          await videoSender.setParameters(params);
+          console.log("RTCRtpSender parameters updated to 800kbps.");
+        } catch (e) {
+          console.error("Failed to update video sender parameters:", e);
+        }
+      } else {
+        console.warn("No video sender found.");
+      }
+
+
       dataChannel = await conn.createDataChannel(label, {});
       if (dataChannel) {
         console.log(
