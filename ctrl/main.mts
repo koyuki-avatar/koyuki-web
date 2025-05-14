@@ -144,6 +144,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     connC.on("open", async () => {
       console.log("Connection C opened.");
+      dataChannelC = await connC.createDataChannel("channelC", {});
+      if (dataChannelC) {
+        console.log("DataChannel C created:", dataChannelC);
+        dataChannelC.onmessage = (messageEvent: MessageEvent) => {
+        };
+      }
 
       const videoSender = connC.pc.getSenders().find(sender => sender.track && sender.track.kind === "video");
       if (videoSender) {
@@ -164,12 +170,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.warn("No video sender found.");
       }
 
-      dataChannelC = await connC.createDataChannel("channelC", {});
-      if (dataChannelC) {
-        console.log("DataChannel C created:", dataChannelA);
-        dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-        };
-      }
     });
 
     connC.on("datachannel", (dc: RTCDataChannel) => {
