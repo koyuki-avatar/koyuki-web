@@ -199,7 +199,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         };
       } else {
-        console.log("DataChannel C null");
+        console.log("DataChannel C null")
       }
     }); 
     // Handle remote streams (if any) 
