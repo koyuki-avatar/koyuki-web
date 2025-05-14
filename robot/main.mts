@@ -190,12 +190,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log("Connection C opened."); 
       dataChannelC = await connC.createDataChannel("channelC", {}); 
       if (dataChannelC) {
-        console.log("DataChannel C opened:", dataChannelC);  
+        console.log("DataChannel C created:", dataChannelC);
+        dataChannel.onopen = () => {
+          console.log("DataChannel C opened by local:", dataChannelC);  
+        };
         dataChannelC.onmessage = (messageEvent: MessageEvent) => { 
           handleDataChannelMessage(messageEvent); 
         
         };
-      } 
+      } else {
+        console.log("DataChannel C null");
+      }
     }); 
     // Handle remote streams (if any) 
     connC.on("addstream", (event: AyameAddStreamEvent) => { 
@@ -206,7 +211,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     connC.on("datachannel", (dc: RTCDataChannel) => {
       dataChannelC = dc;
       dataChannelC.onopen = () => {
-        console.log("DataChannel C opened:", dataChannelC);
+        console.log("DataChannel C opened by remote:", dataChannelC);
       };
       dataChannelC.onmessage = (messageEvent: MessageEvent) => {
           handleDataChannelMessage(messageEvent); 
