@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       dataChannelC = await connC.createDataChannel("channelC", {}); 
       if (dataChannelC) {
         console.log("DataChannel C created:", dataChannelC);
-        dataChannel.onopen = () => {
+        dataChannelC.onopen = () => {
           console.log("DataChannel C opened by local:", dataChannelC);  
         };
         dataChannelC.onmessage = (messageEvent: MessageEvent) => { 
