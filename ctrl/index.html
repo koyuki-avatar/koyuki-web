@@ -98,15 +98,12 @@
       <input id="room-name" type="text" style="width: 200px;">
       <button id="update-id">Update ID</button>
       <select id="resolution-selector">
-        <option value="640x480" selected>640x480</option>
-        <option value="360x240">360x240</option>
+        <option value="640x480">640x480</option>
+        <option value="360x240" selected>360x240</option>
         <option value="144x108">144x108</option>
       </select>
       <button id="connect">Connect</button>
       <button id="disconnect">Disconnect</button>
-      <button id="show-video">映像を表示</button>
-      <button id="show-qr">QRコードを表示</button>
-      <button id="show-both">映像 + QRコードを表示</button>
     </p>
 
     <p>
@@ -122,8 +119,13 @@
     </p>
 
     <p>
-      Signaling Client ID:
-      <input id="client-id-input" type="text" style="width: 300px;">
+      <input id="qr-code-input" type="file">
+      <button id="send-qr-code">QRコードを送信</button>
+    </p>
+    <p>
+      <button id="show-video">映像を表示</button>
+      <button id="show-qr">QRコードを表示</button>
+      <button id="show-both">映像 + QRコードを表示</button>
     </p>
   </div>
 
@@ -138,10 +140,10 @@
   </div>
 
   <div class="qr-section">
-    <div class="qr-panel">
-      <input id="qr-code-input" type="file">
-      <button id="send-qr-code">QRコードを送信 (Connection C)</button>
-    </div>
+    <p>
+      Signaling Client ID:
+      <input id="client-id-input" type="text" style="width: 300px;">
+    </p>
   </div>
 
   <script src="/lib/joy.js"></script>

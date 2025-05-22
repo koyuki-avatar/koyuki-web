@@ -2,235 +2,268 @@ import type { AyameAddStreamEvent, Connection } from "@open-ayame/ayame-web-sdk"
 import { createConnection, defaultOptions } from "@open-ayame/ayame-web-sdk";
 import { ControlSender } from "../lib/ControlSender.ts";
 
-document.addEventListener("DOMContentLoaded", async () => {
+// --------------------------------------------------------------------------
+//  DOM READY
+// --------------------------------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   const urlRoomId = urlParams.get("roomId");
 
-  // Environment variables
+  // ------------------------------------------------------------------------
+  //  Environment
+  // ------------------------------------------------------------------------
   const signalingUrl = import.meta.env.VITE_AYAME_SIGNALING_URL;
   const roomIdPrefix = import.meta.env.VITE_AYAME_ROOM_ID_PREFIX;
   const signalingKey = import.meta.env.VITE_AYAME_SIGNALING_KEY;
 
   let roomName = urlRoomId || import.meta.env.VITE_AYAME_ROOM_NAME || "default-room";
   const clientId = crypto.randomUUID();
-  const options = defaultOptions;
-  options.signalingKey = signalingKey;
-  options.clientId = clientId;
+  const options = { ...defaultOptions, signalingKey, clientId };
 
+  // ------------------------------------------------------------------------
+  //  Connection state
+  // ------------------------------------------------------------------------
   let connC: Connection | null = null;
   let dataChannelC: RTCDataChannel | null = null;
 
+  // ------------------------------------------------------------------------
+  //  File-transfer state
+  // ------------------------------------------------------------------------
   let fileMetadata: { fileName: string; fileSize: number } | null = null;
   let receivedFileChunks: ArrayBuffer[] = [];
-  let mode: string | null = null;
 
-  // Update room name
+  // ------------------------------------------------------------------------
+  //  View-mode state
+  // ------------------------------------------------------------------------
+  let mode: "SHOW_VIDEO" | "SHOW_QR" | "SHOW_BOTH" | null = null;
+
+  // ------------------------------------------------------------------------
+  //  Reconnect helper (after first manual connect)
+  // ------------------------------------------------------------------------
+  let autoReconnect = false; // becomes true after first open
+  let reconnectTimer: number | null = null;
+  const RECONNECT_DELAY = 2000; // ms
+
+  const scheduleReconnect = () => {
+    if (!autoReconnect) return;
+    if (reconnectTimer !== null) return;
+    reconnectTimer = window.setTimeout(() => {
+      reconnectTimer = null;
+      console.log("Auto-reconnect…");
+      connectC();
+    }, RECONNECT_DELAY);
+  };
+
+  // ------------------------------------------------------------------------
+  //  UI: room name
+  // ------------------------------------------------------------------------
   const roomNameInput = document.getElementById("room-name") as HTMLInputElement;
   const roomIdPrefixLabel = document.getElementById("room-id-prefix") as HTMLLabelElement;
-  if (roomIdPrefixLabel) {
-    roomIdPrefixLabel.textContent = roomIdPrefix;
-  }
+  if (roomIdPrefixLabel) roomIdPrefixLabel.textContent = roomIdPrefix;
   roomNameInput.value = roomName;
-
   document.getElementById("update-id")?.addEventListener("click", () => {
     roomName = roomNameInput.value;
     console.log("Room name updated to:", roomName);
   });
 
-  const handleViewMode = (mode: "SHOW_VIDEO" | "SHOW_QR" | "SHOW_BOTH") => {
-    console.log(`画面モード変更: ${mode}`);
-    const videoContainer = document.getElementById("remote-video-C") as HTMLVideoElement;
-    const qrContainer = document.getElementById("received-images") as HTMLDivElement;
-  
+  // ------------------------------------------------------------------------
+  //  View-mode handler
+  // ------------------------------------------------------------------------
+  const handleViewMode = (m: "SHOW_VIDEO" | "SHOW_QR" | "SHOW_BOTH") => {
+    mode = m;
+    const video = document.getElementById("remote-video-C") as HTMLVideoElement;
+    const qr = document.getElementById("received-images") as HTMLDivElement;
 
-    if (mode === "SHOW_VIDEO") {
-      videoContainer.style.display = "block";
-      
-      // ウィンドウ幅に合わせる
-      videoContainer.style.width = `${window.innerWidth}px`;  
-      videoContainer.style.height = `${window.innerHeight}px`;  
+    // helper to clear layout-related inline styles (position / size)
+    const resetStyles = () => {
+      [video, qr].forEach((el) => {
+        el.style.position = "";
+        el.style.top = "";
+        el.style.left = "";
+        el.style.right = "";
+        el.style.bottom = "";
+        el.style.width = "";
+        el.style.height = "";
+        el.style.background = "";
+        el.style.display = "";
+        el.style.justifyContent = "";
+        el.style.alignItems = "";
+        el.style.marginTop = "";
+      });
+    };
 
-      // アスペクト比を維持
-      videoContainer.style.objectFit = "contain"; 
+    resetStyles();
 
-      qrContainer.style.display = "none";
-      console.log("切り替え: 映像モード (ウィンドウ幅に適応)");
-    } else if (mode === "SHOW_QR") {
-      videoContainer.style.display = "none";
-  
-      if (qrContainer.children.length > 0) {
-        qrContainer.style.display = "block";
-        qrContainer.style.width = "100vw";
-        qrContainer.style.height = "100vh";
-        console.log("切り替え: QRコードモード (フルスクリーン)");
-      } else {
-        console.warn("QRコードがまだ受信されていません。");
+    switch (m) {
+      // --------------------------------------------------------------------
+      case "SHOW_VIDEO": {
+        video.style.display = "block";
+        video.style.position = "fixed";
+        video.style.top = "0";
+        video.style.left = "0";
+        video.style.width = "100vw";
+        video.style.height = "100vh";
+        video.style.objectFit = "cover";
+        video.style.background = "black";
+        qr.style.display = "none";
+        break;
       }
-    } else if (mode === "SHOW_BOTH") {
-      videoContainer.style.display = "block";
-      videoContainer.style.width = "600px"; 
-      videoContainer.style.height = "450px"; 
-  
-      if (qrContainer.children.length > 0) {
-        qrContainer.style.display = "block";
-        qrContainer.style.width = "230px";
-        qrContainer.style.height = "auto";
-        console.log("切り替え: 映像 + QRコードモード");
+      // --------------------------------------------------------------------
+      case "SHOW_QR": {
+        qr.style.display = "flex";
+        qr.style.position = "fixed";
+        qr.style.top = "0";
+        qr.style.left = "0";
+        qr.style.width = "100vw";
+        qr.style.height = "100vh";
+        qr.style.background = "white";
+        qr.style.justifyContent = "center";
+        qr.style.alignItems = "center";
+
+        if (qr.children.length === 0) {
+          qr.innerHTML = "<span style=\"font-size:2rem;color:#444;\">Waiting for QR…</span>";
+        }
+        video.style.display = "none";
+        break;
+      }
+      // --------------------------------------------------------------------
+      case "SHOW_BOTH": {
+        // keep original layout flow
+        video.style.display = "block";
+        video.style.width = "600px";
+        video.style.height = "450px";
+        video.style.objectFit = "contain";
+
+        qr.style.display = "block";
+        qr.style.background = "white";
+        qr.style.marginTop = "10px"; // keep below video as in original HTML
+        // do NOT position fixed so it stays under heading
+        break;
       }
     }
+    console.log("画面モード変更:", m);
   };
-  
-  const handleDataChannelMessage = (messageEvent: MessageEvent) => {
-    let data: any;
-    console.log("-----mode------:", mode)
-  
-    if (typeof messageEvent.data === "string") {
-      try {
-        if (messageEvent.data === "SHOW_VIDEO" || messageEvent.data === "SHOW_QR" || messageEvent.data ==="SHOW_BOTH") {
-          data = messageEvent.data;
-          mode = data
-          handleViewMode(mode);
-          console.log("mode:",mode)
-        } else {
-          data = JSON.parse(messageEvent.data);
-        }
-      } catch (e) {
-        console.error("JSON のパースに失敗:", e);
+
+  // ------------------------------------------------------------------------
+  //  DataChannel message handler
+  // ------------------------------------------------------------------------
+  const handleDataChannelMessage = (ev: MessageEvent) => {
+    // commands --------------------------------------------------------------
+    if (typeof ev.data === "string") {
+      if (ev.data === "SHOW_VIDEO" || ev.data === "SHOW_QR" || ev.data === "SHOW_BOTH") {
+        handleViewMode(ev.data);
         return;
       }
-    } else if (typeof messageEvent.data === "object" && messageEvent.data !== null && "type" in messageEvent.data) {
-      data = messageEvent.data;
-    } else if (messageEvent.data instanceof ArrayBuffer) {
-      receivedFileChunks.push(messageEvent.data);
-      console.log("チャンク受信: サイズ", messageEvent.data.byteLength);
-      return; 
-    } else {
-      console.error("Unsupported message type:", messageEvent.data);
+      try {
+        const json = JSON.parse(ev.data);
+        processControlMessage(json);
+      } catch (e) {
+        console.error("JSON parse error:", e);
+      }
       return;
     }
-  
+
+    // file chunk -----------------------------------------------------------
+    if (ev.data instanceof ArrayBuffer) {
+      receivedFileChunks.push(ev.data);
+      return;
+    }
+
+    // object message -------------------------------------------------------
+    if (typeof ev.data === "object" && ev.data !== null && "type" in ev.data) {
+      processControlMessage(ev.data);
+    }
+  };
+
+  // ------------------------------------------------------------------------
+  const processControlMessage = (data: any) => {
     if (data.type === "fileHeader") {
       fileMetadata = { fileName: data.fileName, fileSize: data.fileSize };
       receivedFileChunks = [];
-      console.log("ファイルヘッダーを受信:", fileMetadata);
-    } else if (data.type === "fileDone") {
+      return;
+    }
+
+    if (data.type === "fileDone") {
       const blob = new Blob(receivedFileChunks, { type: "image/png" });
       const url = URL.createObjectURL(blob);
-  
-      let receivedImages = document.querySelector("#received-images") as HTMLDivElement;
-      if (!receivedImages) {
-        console.error("受信用の #received-images 要素が見つかりません。動的に生成します。");
-        receivedImages = document.createElement("div");
-        receivedImages.id = "received-images";
-        document.body.appendChild(receivedImages);
+
+      let qr = document.querySelector("#received-images") as HTMLDivElement;
+      if (!qr) {
+        qr = document.createElement("div");
+        qr.id = "received-images";
+        document.body.appendChild(qr);
       }
 
-      // 既存のQRコード画像を削除（上書きするため）
-      while (receivedImages.firstChild) {
-        receivedImages.removeChild(receivedImages.firstChild);
-      }
+      qr.innerHTML = ""; // clear previous content
 
       const img = document.createElement("img");
       img.src = url;
       img.alt = fileMetadata?.fileName || "Received Image";
+      img.style.objectFit = "contain";
 
-      console.log("mode2:",mode)
-      if (mode === "SHOW_QR") {
-        img.style.width = "100%";  
-        img.style.height = "100%"; 
-        img.style.objectFit = "contain"; 
-        console.log("QRコードのみ表示: フルスクリーン化");
-      } else {
-        img.style.maxWidth = "300px";
-        console.log("QRコード表示: 通常サイズ (max-width: 300px)");
-      }
+      img.style.maxHeight = "90vh"; // keep some margin
+      img.style.maxWidth = "90vw";
 
-      receivedImages.appendChild(img);
-      receivedImages.style.display = "block";
-      console.log("画像が正常に表示されました。");
-  
+      qr.appendChild(img);
+      qr.style.background = "white";
+
       fileMetadata = null;
       receivedFileChunks = [];
     }
-
-    console.log(`受信メッセージ: ${messageEvent.data}, DataChannel 状態: ${dataChannelC.readyState}`); 
-    const message = messageEvent.data; 
-    const videoContainer = document.getElementById("remote-video-C") as HTMLVideoElement; 
-    const qrContainer = document.getElementById("received-images") as HTMLDivElement; 
-    if (message === "SHOW_VIDEO") { 
-      console.log("SHOW_VIDEO 受信！"); 
-      videoContainer.style.display = "block";
-      qrContainer.style.display = "none";
-      console.log("切り替え: 映像モード"); 
-    } else if (message === "SHOW_QR") { 
-      console.log("SHOW_QR 受信！"); 
-      videoContainer.style.display = "none"; 
-      if (qrContainer.children.length > 0) { 
-        qrContainer.style.display = "block"; 
-      } else { 
-        console.warn("QRコードがまだ受信されていません。"); 
-      } 
-      console.log("切り替え: QRコードモード"); 
-    } else if (message === "SHOW_BOTH") {
-      videoContainer.style.display = "block";
-
-      if (qrContainer.children.length > 0) {
-        qrContainer.style.display = "block";
-        console.log("切り替え: 映像 + QRコードモード");
-      } else {
-        console.warn("QRコードがまだ受信されていませんが、映像は表示します。");
-      }
-    }
   };
 
-  // Connection C
-  const connectC = async () => { 
+  // ------------------------------------------------------------------------
+  //  Connection routine
+  // ------------------------------------------------------------------------
+  const connectC = async () => {
+    if (connC) {
+      console.log("connectC skipped: connection already exists.");
+      return;
+    }
+
     connC = createConnection(signalingUrl, `${roomIdPrefix}${roomName}-C`, options);
-    connC.on("open", async () => { 
-      console.log("Connection C opened."); 
-      dataChannelC = await connC.createDataChannel("channelC", {}); 
+
+    connC.on("open", async () => {
+      console.log("Connection C opened.");
+      autoReconnect = true;
+      dataChannelC = await connC!.createDataChannel("channelC", {});
       if (dataChannelC) {
-        console.log("DataChannel C created:", dataChannelC);
-        dataChannelC.onopen = () => {
-          console.log("DataChannel C opened by local:", dataChannelC);  
-        };
-        dataChannelC.onmessage = (messageEvent: MessageEvent) => { 
-          handleDataChannelMessage(messageEvent); 
-        
-        };
-      } else {
-        console.log("DataChannel C null")
+        dataChannelC.onopen    = () => console.log("DataChannel C opened (local).");
+        dataChannelC.onmessage = handleDataChannelMessage;
       }
-    }); 
-    // Handle remote streams (if any) 
-    connC.on("addstream", (event: AyameAddStreamEvent) => { 
-      const remoteVideo = document.getElementById("remote-video-C") as HTMLVideoElement; 
-      if (remoteVideo) { remoteVideo.srcObject = event.stream; } 
-    }); 
-    
+    });
+
+    connC.on("addstream", (ev: AyameAddStreamEvent) => {
+      (document.getElementById("remote-video-C") as HTMLVideoElement).srcObject = ev.stream;
+    });
+
     connC.on("datachannel", (dc: RTCDataChannel) => {
       dataChannelC = dc;
-      dataChannelC.onopen = () => {
-        console.log("DataChannel C opened by remote:", dataChannelC);
-      };
-      dataChannelC.onmessage = (messageEvent: MessageEvent) => {
-          handleDataChannelMessage(messageEvent); 
-      };
+      dataChannelC.onopen    = () => console.log("DataChannel C opened (remote).");
+      dataChannelC.onmessage = handleDataChannelMessage;
     });
-      
-    connC.connect(); // No local media stream provided, making it receive-only 
+
+    connC.on("disconnect", () => {
+      console.log("Connection C disconnected.");
+      connC = null;
+      (document.getElementById("remote-video-C") as HTMLVideoElement).srcObject = null;
+      scheduleReconnect();
+    });
+
+    connC.connect();
   };
 
+  // ------------------------------------------------------------------------
+  //  UI buttons (no auto‑connect at start)
+  // ------------------------------------------------------------------------
   document.querySelector("#connect")?.addEventListener("click", async () => {
     await connectC();
-    console.log("All connections established.");
   });
 
   document.querySelector("#disconnect")?.addEventListener("click", async () => {
     if (connC) await connC.disconnect();
-
     connC = null;
     (document.getElementById("remote-video-C") as HTMLVideoElement).srcObject = null;
-    console.log("All connections disconnected.");
-  })
+    scheduleReconnect();
+  });
 });
