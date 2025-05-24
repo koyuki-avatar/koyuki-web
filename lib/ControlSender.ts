@@ -22,12 +22,36 @@ export class ControlSender {
       if (gamepadCheckbox) gamepadCheckbox.checked = false;
     });
 
+    window.addEventListener("gamepadconnected", () => {
+      this.pollGamepad();
+    });
+
     document.querySelector("#set-maxspeed")?.addEventListener("click", () => {
       const x = parseFloat((document.getElementById("maxspeed-x") as HTMLInputElement).value);
       const z = parseFloat((document.getElementById("maxspeed-z") as HTMLInputElement).value);
       this.setMaxSpeed(x, z);
       console.log("maxspeed set:", this.maxspeedX, this.maxspeedZ);
     });
+  }
+
+  pollGamepad() {
+    const gamepads = navigator.getGamepads();
+    const gp = gamepads[0];
+    if (!gp) return;
+
+    if (this.isGamepad) {
+      const armsInput = document.getElementById("arms") as HTMLInputElement;
+      let a = parseFloat(armsInput.value);
+
+      if (gp.buttons[1].pressed) {
+        a += 0.025;
+      }
+      if (gp.buttons[2].pressed) {
+        a -= 0.025;
+      }
+      armsInput.value = a.toString();
+    }
+    requestAnimationFrame(this.pollGamepad.bind(this));
   }
 
   public setDataChannel(channel: RTCDataChannel) {
@@ -93,10 +117,11 @@ export class ControlSender {
 
     const rawx = gp.axes[0];
     const rawy = gp.axes[1];
-    const rawa = gp.axes[2];
+//    const rawa = gp.axes[2];
     const x = Math.abs(rawx) < deadzone ? 0 : rawx;
     const y = Math.abs(rawy) < deadzone ? 0 : rawy;
-    const a = Math.abs(rawa) < deadzone ? 0 : rawa;
+    const a = parseFloat((document.getElementById("arms") as HTMLInputElement).value);
+//    const a = Math.abs(rawa) < deadzone ? 0 : rawa;
 
     const kill = gp.buttons[4].pressed || gp.buttons[5].pressed;
     if (kill) {
@@ -107,7 +132,7 @@ export class ControlSender {
 
     this.joy.SetXY?.(rawx * 100, -rawy * 100);
     this.updateStatus("Connected: " + gp.id);
-    (document.getElementById("arms") as HTMLInputElement).value = a.toString();
+//    (document.getElementById("arms") as HTMLInputElement).value = a.toString();
   }
 
   private updateStatus(text: string) {
